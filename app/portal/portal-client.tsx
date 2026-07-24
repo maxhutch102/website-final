@@ -87,9 +87,9 @@ export default function ClientPortal({ initialLeadId }: { initialLeadId:number|n
   const amountPaid = activeInvoices.reduce((sum, item) => sum + item.paidCents, 0);
   const amountDue = Math.max(0, amountBilled - amountPaid);
   return <main className="client-portal-shell">
-    <header className="client-portal-header"><Link href="/"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch" /></Link><div><span>CLIENT PORTAL</span><b>{data.customer.business}</b></div><a href="/signout-with-chatgpt?return_to=/">Sign out</a></header>
+    <header className="client-portal-header"><Link href="/"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch" /></Link><div><span>CLIENT PORTAL</span><b>{data.customer.business}</b></div><a href="/api/auth/logout?returnTo=/">Sign out</a></header>
     <section className="client-portal-content">
-      {data.viewer.isStaff && <div className="staff-preview-banner"><b>Employee preview</b><span>You are viewing the exact portal experience connected to this customer.</span><Link href={`/crm?view=projects&lead=${data.customer.id}`}>Return to Business Hub</Link></div>}
+      {data.viewer.isStaff && <div className="staff-preview-banner"><b>Employee preview</b><span>You are viewing the exact portal experience connected to this customer.</span><Link href={`/crm?view=projects&lead=${data.customer.id}`}>Return to Business Hutch</Link></div>}
       {data.viewer.testClient && <div className="test-client-banner"><div><b>TEST CLIENT ACCOUNT</b><span>You are viewing this portal exactly as the customer sees it.</span></div><button onClick={async()=>{await fetch("/api/test-access",{method:"DELETE"});window.location.href="/crm?view=settings";}}>Return to Owner</button></div>}
       <div className="client-welcome"><div><p className="crm-eyebrow">{data.project.status.toUpperCase().replaceAll("_"," ")}</p><h1>{data.customer.project}</h1><p>Hi {data.customer.name.split(" ")[0]}—here&apos;s the latest on your project.</p></div><div className="client-progress-ring" style={{"--progress": `${data.project.progress * 3.6}deg`} as React.CSSProperties}><strong>{data.project.progress}%</strong><span>complete</span></div></div>
       <div className="client-progress-bar"><i style={{width:`${data.project.progress}%`}} /></div>

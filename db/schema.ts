@@ -343,3 +343,32 @@ export const internalDocumentAcknowledgments = sqliteTable("internal_document_ac
   version: integer("version").notNull(),
   acknowledgedAt: text("acknowledged_at").notNull(),
 });
+
+export const authLoginTokens = sqliteTable("auth_login_tokens", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  email: text("email").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  returnTo: text("return_to").notNull().default("/"),
+  expiresAt: text("expires_at").notNull(),
+  usedAt: text("used_at"),
+  createdAt: text("created_at").notNull(),
+});
+
+export const authSessions = sqliteTable("auth_sessions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  email: text("email").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: text("expires_at").notNull(),
+  lastSeenAt: text("last_seen_at").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+export const employeePasswords = sqliteTable("employee_passwords", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  passwordSalt: text("password_salt").notNull(),
+  iterations: integer("iterations").notNull().default(210000),
+  updatedAt: text("updated_at").notNull(),
+  createdAt: text("created_at").notNull(),
+});

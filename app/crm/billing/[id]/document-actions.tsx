@@ -49,7 +49,7 @@ export default function DocumentActions({
 
   return (
     <div className="document-toolbar" aria-label="Document actions">
-      <a href="/crm">← Back to Business Hub</a>
+      <a href="/crm">← Back to Business Hutch</a>
       <div>
         <button onClick={printDocument}>Print / Save as PDF</button>
         <button onClick={downloadWordCopy}>Download Word copy</button>

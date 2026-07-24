@@ -2,6 +2,8 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 
 import { ReactNode, useEffect, useRef, useState } from "react";
+import SiteFooter from "../site-footer";
+import SiteHeader from "../site-header";
 
 const values = [
   ["01", "Useful over flashy", "Good design matters, but the finished product also has to save time, reduce friction, or help your business earn trust."],
@@ -28,13 +30,7 @@ function PixelReveal({ children, className = "" }: { children: ReactNode; classN
 export default function AboutPage() {
   return (
     <main>
-      <header className="site-header">
-        <a className="brand" href="/" aria-label="Pixel Hutch home"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch, precision solutions for your business" /></a>
-        <nav aria-label="Primary navigation">
-          <a href="/services">Services &amp; Pricing</a><a href="/work">Our work</a><a href="/#process">Process</a><a className="nav-active" href="/about">About</a>
-        </nav>
-        <a className="button button-small" href="/contact">Let&apos;s talk <span aria-hidden="true">↗</span></a>
-      </header>
+      <SiteHeader active="about" />
 
       <section className="about-hero section-shell" id="top">
         <div className="about-hero-copy">
@@ -89,7 +85,7 @@ export default function AboutPage() {
 
       <section className="services-cta section-shell"><div><p className="kicker kicker-light">LET&apos;S MAKE SOMETHING BETTER</p><h2>Tell me what is slowing<br />your business down.</h2></div><a className="button button-dark" href="/contact">Talk directly with Max <span aria-hidden="true">↗</span></a></section>
 
-      <footer><a className="footer-brand" href="/"><span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /></span><strong>PIXEL HUTCH</strong></a><p>Websites, systems, and support for businesses.</p><div><img className="footer-copyright" src="/pixel-hutch-copyright.png" alt="Copyright 2026 Pixel Hutch" /><span className="footer-links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="#top">Back to top ↑</a></span></div></footer>
+      <SiteFooter />
     </main>
   );
 }
