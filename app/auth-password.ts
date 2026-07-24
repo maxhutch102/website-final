@@ -1,4 +1,4 @@
-const ITERATIONS = 210000;
+const ITERATIONS = 100000;
 
 export async function hashPassword(password: string, salt = randomSalt()) {
   const derived = await derive(password, salt, ITERATIONS);
