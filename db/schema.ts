@@ -226,6 +226,16 @@ export const clientAccounts = sqliteTable("client_accounts", {
   updatedAt: text("updated_at").notNull(),
 });
 
+export const clientPasswords = sqliteTable("client_passwords", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  clientAccountId: integer("client_account_id").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  passwordSalt: text("password_salt").notNull(),
+  iterations: integer("iterations").notNull().default(100000),
+  updatedAt: text("updated_at").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
 export const testAccessSessions = sqliteTable("test_access_sessions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   tokenHash: text("token_hash").notNull().unique(),

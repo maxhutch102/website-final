@@ -20,7 +20,7 @@ export async function sendClientWelcomeEmail(request: Request, input: {
           <p style="font-size:16px;line-height:1.6">Your secure Pixel Hutch portal for <strong>${input.businessName}</strong> is ready.</p>
           <p style="font-size:16px;line-height:1.6">Use it to complete forms, approve project details, upload files, review invoices, and see updates in one place.</p>
           <p><a href="${link}" style="display:inline-block;border-radius:8px;background:#f54702;padding:13px 20px;color:white;text-decoration:none;font-weight:bold">Activate my client account</a></p>
-          <p style="color:#73777d;font-size:13px">This activation link expires in 20 minutes. Afterward, request a fresh secure link from the client login page.</p>
+          <p style="color:#73777d;font-size:13px">This one-time activation link expires in 20 minutes. You will create a password before entering your portal.</p>
         </div>
       </div>`,
     }),

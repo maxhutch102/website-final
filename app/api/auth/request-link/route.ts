@@ -1,14 +1,14 @@
 import { eq } from "drizzle-orm";
 import { createEmailToken, sendAuthEmail } from "@/app/auth-email";
 import { getDb } from "@/db";
-import { employees, leads } from "@/db/schema";
+import { clientAccounts, employees } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   const form = await request.formData();
   const email = String(form.get("email") || "").trim().toLowerCase();
-  const type = String(form.get("type") || "client-login");
+  const type = String(form.get("type") || "client-password-reset");
   const returnTo = String(form.get("returnTo") || (type === "password-reset" ? "/crm" : "/portal"));
   const db = await getDb();
 
@@ -16,14 +16,14 @@ export async function POST(request: Request) {
   if (type === "password-reset") {
     const [employee] = await db.select().from(employees).where(eq(employees.email, email)).limit(1);
     allowed = Boolean(employee && employee.status === "active") || email === "mhutchi2517@gmail.com";
-  } else {
-    const [lead] = await db.select().from(leads).where(eq(leads.email, email)).limit(1);
-    allowed = Boolean(lead);
+  } else if (type === "client-password-reset") {
+    const [account] = await db.select().from(clientAccounts).where(eq(clientAccounts.email, email)).limit(1);
+    allowed = Boolean(account && account.status === "active");
   }
 
   if (allowed) {
     try {
-      const purpose = type === "password-reset" ? "password-reset" : "client-login";
+      const purpose = type === "password-reset" ? "password-reset" : "client-password-reset";
       const token = await createEmailToken(email, purpose, returnTo);
       await sendAuthEmail(request, email, purpose, token);
     } catch (error) {

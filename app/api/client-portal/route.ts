@@ -2,7 +2,7 @@ import { getChatGPTUser } from "@/app/chatgpt-auth";
 import { getDb } from "@/db";
 import { getTestAccessSession, logActivity, requireAccess, isAccessResponse } from "@/db/access";
 import {
-  billingDocuments, clientForms, clientProjects, employees, fileRequests, formEvents, formTemplates, leads,
+  billingDocuments, clientAccounts, clientForms, clientProjects, employees, fileRequests, formEvents, formTemplates, leads,
   payments, projectFiles, projectMessages, projectTasks, projectUpdates,
 } from "@/db/schema";
 import { and, desc, eq, inArray } from "drizzle-orm";
@@ -23,7 +23,12 @@ async function authorize(leadId: number) {
     return { error: Response.json({ error: "This test client session is linked to a different customer." }, { status: 403 }) };
   }
   const testClient = testSession?.mode === "client" && testSession.leadId === leadId;
-  const isClient = lead.email.toLowerCase() === user.email.toLowerCase() || testClient;
+  const [clientAccount] = await db.select().from(clientAccounts)
+    .where(eq(clientAccounts.leadId, leadId)).limit(1);
+  const isClient = (
+    clientAccount?.status === "active"
+    && clientAccount.email.toLowerCase() === user.email.toLowerCase()
+  ) || testClient;
   if (!employee && !bootstrapOwner && !isClient) {
     return { error: Response.json({ error: "This project is not connected to your account." }, { status: 403 }) };
   }

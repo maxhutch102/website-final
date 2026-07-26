@@ -1288,3 +1288,35 @@ footer > div:last-child { grid-column: 1 / -1; padding-top: 20px; border-top: 1p
 .client-site-preview{margin:24px 0;padding:25px;border:1px solid #dfe3e8;border-radius:18px;background:#fff;box-shadow:0 10px 30px rgba(26,31,38,.05)}.client-site-preview>header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:18px}.client-site-preview h2{margin:3px 0 5px}.client-site-preview header p{margin:0;color:#68717d}.client-site-preview header a{padding:10px 13px;border-radius:8px;background:#20252c;color:#fff;font-size:11px;font-weight:900;text-decoration:none;white-space:nowrap}.client-site-preview>div{height:620px;overflow:hidden;border:1px solid #cfd5da;border-radius:11px;background:#eef1f3}.client-site-preview iframe{width:100%;height:100%;border:0;background:#fff}.client-site-preview>small{display:block;margin-top:10px;color:#7c858e}
 @media(max-width:900px){.forms-layout{grid-template-columns:1fr}.forms-create{grid-template-columns:1fr 1fr}.forms-client-strip{grid-template-columns:1fr}.forms-list{max-height:360px;overflow:auto}.crm-workspace.customer-directory .lead-list{grid-template-columns:1fr}}@media(max-width:650px){.forms-workspace{padding:18px 12px}.forms-heading,.client-forms-section>header,.client-site-preview>header{flex-direction:column}.forms-create,.forms-fields,.client-form-body>div:not(.client-signed-record){grid-template-columns:1fr}.forms-fields .wide,.client-form-body .wide{grid-column:auto}.forms-delivery{grid-template-columns:1fr}.client-form-summary{grid-template-columns:34px 1fr auto}.client-form-summary>strong{display:none}.forms-topbar>a span{display:none}.client-site-preview>div{height:480px}}
 @media print{.forms-topbar,.forms-heading,.forms-list,.forms-message,.forms-editor footer,.forms-client-strip button{display:none!important}.forms-page,.forms-workspace{padding:0;background:#fff}.forms-layout{display:block}.forms-editor{border:0;box-shadow:none}.forms-fields input,.forms-fields textarea,.forms-fields select{border-color:#ddd}}
+.client-password-reset {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(70, 70, 70, 0.18);
+}
+
+.client-password-reset label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.client-reset-row {
+  display: flex;
+  gap: 8px;
+}
+
+.client-reset-row input {
+  min-width: 0;
+  flex: 1;
+}
+
+.client-reset-row button {
+  border: 0;
+  border-radius: 6px;
+  padding: 0 14px;
+  background: #464646;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}

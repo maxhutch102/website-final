@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     }).returning();
   }
   try {
-    const token = await createEmailToken(lead.email, "client-login", `/portal?project=${lead.id}`);
+    const token = await createEmailToken(lead.email, "client-activation", `/portal?project=${lead.id}`);
     await sendClientWelcomeEmail(request, {
       to: lead.email, customerName: lead.name, businessName: lead.business, leadId: lead.id, token,
     });

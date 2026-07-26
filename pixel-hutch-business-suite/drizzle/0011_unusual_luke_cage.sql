@@ -1,0 +1,1 @@
+ALTER TABLE `business_settings` ADD `service_catalog_json` text DEFAULT '[]' NOT NULL;

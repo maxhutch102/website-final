@@ -3,7 +3,7 @@ import { getDb } from "@/db";
 import { authLoginTokens } from "@/db/schema";
 import { randomToken, safeRelativeReturnPath, sha256 } from "@/app/chatgpt-auth";
 
-export type AuthPurpose = "client-login" | "password-reset";
+export type AuthPurpose = "client-activation" | "client-password-reset" | "password-reset";
 
 export async function createEmailToken(email: string, purpose: AuthPurpose, returnTo: string) {
   const db = await getDb();
@@ -28,11 +28,15 @@ export async function sendAuthEmail(
   const { env } = await import("cloudflare:workers");
   if (!env.RESEND_API_KEY) throw new Error("RESEND_API_KEY is not configured.");
   const origin = new URL(request.url).origin;
-  const path = purpose === "client-login" ? "/api/auth/verify" : "/reset-password";
+  const path = purpose === "password-reset"
+    ? "/reset-password"
+    : purpose === "client-activation"
+      ? "/api/auth/verify"
+      : "/create-client-password";
   const link = `${origin}${path}?token=${encodeURIComponent(token)}`;
   const isReset = purpose === "password-reset";
-  const subject = isReset ? "Reset your Pixel Hutch password" : "Your Pixel Hutch client portal link";
-  const action = isReset ? "Set a new password" : "Open your client portal";
+  const subject = isReset ? "Reset your Pixel Hutch password" : "Reset your Pixel Hutch client portal password";
+  const action = "Set a new password";
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
