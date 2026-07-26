@@ -2,7 +2,7 @@ import { and, eq, gt, isNull } from "drizzle-orm";
 import { tokenPurpose } from "@/app/auth-email";
 import { createSession, sessionCookie, sha256 } from "@/app/chatgpt-auth";
 import { getDb } from "@/db";
-import { authLoginTokens } from "@/db/schema";
+import { authLoginTokens, clientAccounts } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +21,15 @@ export async function GET(request: Request) {
     return Response.redirect(new URL("/client-login?error=expired", request.url), 303);
   }
   await db.update(authLoginTokens).set({ usedAt: now }).where(eq(authLoginTokens.id, record.id));
+  const [account] = await db.select().from(clientAccounts).where(eq(clientAccounts.email, record.email.toLowerCase())).limit(1);
+  if (account) {
+    await db.update(clientAccounts).set({
+      status: "active",
+      firstLoginAt: account.firstLoginAt || now,
+      lastLoginAt: now,
+      updatedAt: now,
+    }).where(eq(clientAccounts.id, account.id));
+  }
   const session = await createSession(record.email);
   return new Response(null, {
     status: 303,

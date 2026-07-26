@@ -189,12 +189,18 @@ export async function PATCH(request: Request) {
   if (body.action === "updateProject") {
     if (!["owner", "admin", "sales", "support"].includes(actor.role)) return Response.json({ error: "You cannot edit project settings." }, { status: 403 });
     const id = Number(body.id);
+    const previewUrl = String(body.previewUrl || "").trim().slice(0, 2000);
+    if (previewUrl && !/^https:\/\/[^\s]+$/i.test(previewUrl)) {
+      return Response.json({ error: "Preview URL must be a secure https:// address." }, { status: 400 });
+    }
     const patch = {
       status: String(body.status || "planning"),
       currentPhase: String(body.currentPhase || ""),
       nextStep: String(body.nextStep || ""),
       targetDate: body.targetDate || null,
       clientSummary: String(body.clientSummary || ""),
+      previewUrl,
+      previewVisible: body.previewVisible === true || body.previewVisible === "on",
       updatedAt: now,
     };
     await db.update(clientProjects).set(patch).where(eq(clientProjects.id, id));
