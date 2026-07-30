@@ -1,6 +1,7 @@
 export const metadata = {
-  title: "Website Terms | Pixel Hutch",
+  title: "Website Terms",
   description: "Terms governing use of the Pixel Hutch public website.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

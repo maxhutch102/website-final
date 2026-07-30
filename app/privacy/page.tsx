@@ -1,6 +1,7 @@
 export const metadata = {
-  title: "Privacy Policy | Pixel Hutch",
+  title: "Privacy Policy",
   description: "How Pixel Hutch collects, uses, and protects information submitted through its website and business services.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {

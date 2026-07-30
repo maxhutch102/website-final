@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Online Booking Systems | Pixel Hutch",
-  description: "Custom online booking, client management, staff calendars, payments, reminders, and reporting for appointment-based businesses.",
+  title: "Custom Online Booking Systems for Small Businesses",
+  description: "Custom online booking software with client records, staff calendars, payments, reminders, inventory, and reporting for appointment-based businesses.",
+  alternates: { canonical: "/booking-systems" },
+  openGraph: {
+    title: "Custom Online Booking Systems for Small Businesses",
+    description: "Give customers easy online booking while your team manages calendars, clients, payments, reminders, and reports.",
+    url: "/booking-systems",
+  },
 };
 
 const features = [

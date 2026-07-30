@@ -4,7 +4,7 @@ import { getDb } from "@/db";
 import { activityLogs, leads } from "@/db/schema";
 
 const CONTACT_EMAIL = "max@pixel-hutch.com";
-const DEFAULT_FROM_EMAIL = "Pixel Hutch <login@pixel-hutch.com>";
+const DEFAULT_FROM_EMAIL = "Pixel Hutch <inquiries@pixel-hutch.com>";
 
 function text(value: unknown, maxLength = 4000) {
   return String(value ?? "").trim().slice(0, maxLength);
@@ -91,6 +91,7 @@ export async function POST(request: NextRequest) {
 
     const apiKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL || DEFAULT_FROM_EMAIL;
+    const notificationEmail = process.env.CONTACT_NOTIFICATION_EMAIL || CONTACT_EMAIL;
     if (!apiKey) {
       return NextResponse.json({
         error: "Your inquiry was saved, but the confirmation email could not be sent. Max can still see your request.",
@@ -110,32 +111,41 @@ export async function POST(request: NextRequest) {
       row("Referral", inquiry.referral),
     ].join("");
 
-    const response = await fetch("https://api.resend.com/emails/batch", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify([
-        {
-          from: fromEmail,
-          to: [CONTACT_EMAIL],
-          reply_to: inquiry.email,
-          subject: `New Pixel Hutch inquiry — ${inquiry.business}`,
-          html: `<div style="font-family:Arial,sans-serif;max-width:680px;color:#464646"><h1 style="color:#f54702">New project inquiry</h1><table style="border-collapse:collapse">${details}</table><h2 style="margin-top:28px">What they want to build or fix</h2><p style="white-space:pre-wrap;line-height:1.6">${escapeHtml(inquiry.message)}</p></div>`,
+    const sendEmail = async (payload: Record<string, unknown>, label: string) => {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
         },
-        {
-          from: fromEmail,
-          to: [inquiry.email],
-          reply_to: CONTACT_EMAIL,
-          subject: "We received your Pixel Hutch inquiry",
-          html: `<div style="font-family:Arial,sans-serif;max-width:620px;color:#464646"><div style="border-top:8px solid #f54702;padding-top:24px"><h1>Thanks, ${escapeHtml(inquiry.name)}.</h1><p style="font-size:17px;line-height:1.6">Your project inquiry made it safely to Pixel Hutch. I’ll review what you shared and reply personally at this email address.</p><p style="font-size:17px;line-height:1.6">You don’t need to prepare anything else in the meantime. If there’s an important detail you forgot, just reply to this message.</p><p style="margin-top:30px"><strong>Max Hutchison</strong><br>Pixel Hutch<br><a href="https://pixel-hutch.com" style="color:#f54702">pixel-hutch.com</a></p></div></div>`,
-        },
-      ]),
-    });
+        body: JSON.stringify(payload),
+      });
+      const responseText = await response.text();
+      if (!response.ok) {
+        console.error(`Resend ${label} error`, response.status, responseText);
+        return false;
+      }
+      console.info(`Resend ${label} accepted`, responseText);
+      return true;
+    };
 
-    if (!response.ok) {
-      console.error("Resend contact error", response.status, await response.text());
+    const ownerDelivered = await sendEmail({
+      from: fromEmail,
+      to: [notificationEmail],
+      reply_to: inquiry.email,
+      subject: `[ACTION REQUIRED] New website inquiry — ${inquiry.business}`,
+      html: `<div style="font-family:Arial,sans-serif;max-width:680px;color:#464646"><h1 style="color:#f54702">New project inquiry</h1><p><strong>A new lead was saved in Business Hutch.</strong> Reply directly to this email to contact ${escapeHtml(inquiry.name)}.</p><table style="border-collapse:collapse">${details}</table><h2 style="margin-top:28px">What they want to build or fix</h2><p style="white-space:pre-wrap;line-height:1.6">${escapeHtml(inquiry.message)}</p></div>`,
+    }, "owner notification");
+
+    const customerDelivered = await sendEmail({
+      from: fromEmail,
+      to: [inquiry.email],
+      reply_to: notificationEmail,
+      subject: "We received your Pixel Hutch inquiry",
+      html: `<div style="font-family:Arial,sans-serif;max-width:620px;color:#464646"><div style="border-top:8px solid #f54702;padding-top:24px"><h1>Thanks, ${escapeHtml(inquiry.name)}.</h1><p style="font-size:17px;line-height:1.6">Your project inquiry made it safely to Pixel Hutch. I’ll review what you shared and reply personally at this email address.</p><p style="font-size:17px;line-height:1.6">You don’t need to prepare anything else in the meantime. If there’s an important detail you forgot, just reply to this message.</p><p style="margin-top:30px"><strong>Max Hutchison</strong><br>Pixel Hutch<br><a href="https://pixel-hutch.com" style="color:#f54702">pixel-hutch.com</a></p></div></div>`,
+    }, "customer confirmation");
+
+    if (!customerDelivered) {
       return NextResponse.json({
         error: "Your inquiry was saved, but the confirmation email could not be sent. Max can still see your request.",
         leadCaptured: true,
@@ -143,7 +153,7 @@ export async function POST(request: NextRequest) {
       }, { status: 502 });
     }
 
-    return NextResponse.json({ ok: true, leadCaptured: true, leadId });
+    return NextResponse.json({ ok: true, leadCaptured: true, leadId, ownerNotificationSent: ownerDelivered });
   } catch (error) {
     console.error("Contact form error", error);
     return NextResponse.json({ error: "Your inquiry could not be sent. Please try again." }, { status: 500 });
