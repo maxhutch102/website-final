@@ -2,8 +2,6 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 
 import { FormEvent, useState } from "react";
-import SiteFooter from "../site-footer";
-import SiteHeader from "../site-header";
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
@@ -43,7 +41,13 @@ export default function ContactPage() {
 
   return (
     <main>
-      <SiteHeader active="contact" />
+      <header className="site-header">
+        <a className="brand" href="/" aria-label="Pixel Hutch home"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch, precision solutions for your business" /></a>
+        <nav aria-label="Primary navigation">
+          <a href="/services">Services &amp; Pricing</a><a href="/work">Our work</a><a href="/#process">Process</a><a href="/about">About</a>
+        </nav>
+        <a className="button button-small nav-active-button" href="/contact">Let&apos;s talk <span aria-hidden="true">↗</span></a>
+      </header>
 
       <section className="contact-hero section-shell" id="top">
         <div>
@@ -53,8 +57,6 @@ export default function ContactPage() {
         <div className="contact-hero-note">
           <p>Tell me what you&apos;re trying to improve, even if you don&apos;t know exactly what you need yet. I&apos;ll read it personally and help you find the clearest next step.</p>
           <div><span>DIRECT EMAIL</span><a href="mailto:max@pixel-hutch.com">max@pixel-hutch.com ↗</a></div>
-          <div><span>CALL OR TEXT</span><strong><a href="tel:+14803524096">480-352-4096</a> · <a href="sms:+14803524096">Send a text</a></strong></div>
-          <div><span>FOLLOW</span><a href="https://www.facebook.com/profile.php?id=61561260671422" target="_blank" rel="noreferrer">Pixel Hutch on Facebook ↗</a></div>
           <div><span>BASED IN</span><strong>Arizona · Working remotely</strong></div>
         </div>
       </section>
@@ -108,7 +110,7 @@ export default function ContactPage() {
         <p>You do not need a perfect plan, finished copy, or a technical vocabulary. Start with what is slowing you down, and we&apos;ll figure out the right next question together.</p>
       </section>
 
-      <SiteFooter />
+      <footer><a className="footer-brand" href="/"><span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /></span><strong>PIXEL HUTCH</strong></a><p>Websites, systems, and support for businesses.</p><div><img className="footer-copyright" src="/pixel-hutch-copyright.png" alt="Copyright 2026 Pixel Hutch" /><span className="footer-links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="#top">Back to top ↑</a></span></div></footer>
     </main>
   );
 }

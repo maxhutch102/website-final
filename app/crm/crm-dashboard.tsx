@@ -2,7 +2,6 @@
 
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 type Lead = {
   id: number; name: string; business: string; email: string; phone: string; project: string;
@@ -32,7 +31,7 @@ type BillingDocument = { id:number; kind:string; number:string; leadId:number|nu
 type BillingCategory = "open" | "estimates" | "closed" | "canceled";
 type BillingSortKey = "number" | "customer" | "issueDate" | "dueDate" | "total" | "status";
 type ProjectMessage = { id:number; senderName:string; senderType:string; message:string; createdAt:string };
-type Project = { id:number; leadId:number; status:string; progress:number; currentPhase:string; nextStep:string; targetDate:string|null; clientSummary:string; previewUrl:string; previewVisible:boolean };
+type Project = { id:number; leadId:number; status:string; progress:number; currentPhase:string; nextStep:string; targetDate:string|null; clientSummary:string };
 type ProjectTask = { id:number; projectId:number; title:string; description:string; milestone:string; status:string; priority:string; assignedEmployeeId:number|null; dueDate:string|null; visibleToClient:boolean; clientApprovalRequired:boolean; completedAt:string|null };
 type ProjectTemplate = { id:number; name:string; description:string; tasksJson:string };
 type InternalDocument = { id:number; title:string; description:string; category:string; folder:string; visibility:string; requiresAcknowledgment:boolean; linkedTaskId:number|null; status:string; currentVersion:number; updatedAt:string };
@@ -54,22 +53,20 @@ const stages = [["new", "New"], ["contacted", "Contacted"], ["qualified", "Quali
 const menu = [
   ["dashboard", "▦", "Dashboard"], ["customers", "◎", "Customers"], ["projects", "◇", "Projects"],
   ["tasks", "✓", "Tasks"], ["employees", "♙", "Employees"], ["timecards", "◷", "Timecards"],
-  ["forms", "☑", "Forms & approvals"], ["documents", "▤", "Project files"], ["library", "▥", "Internal library"], ["calendar", "□", "Calendar"], ["billing", "$", "Quotes & invoices"],
+  ["documents", "▤", "Project files"], ["library", "▥", "Internal library"], ["calendar", "□", "Calendar"], ["billing", "$", "Quotes & invoices"],
   ["messages", "✉", "Messages"], ["reports", "▥", "Reports & analytics"], ["activity", "◉", "Activity log"], ["settings", "⚙", "Settings"],
 ];
 const comingSoon = new Set<string>();
-const routeForView = (view: string) => view === "dashboard" ? "/crm" : `/crm/${view}`;
 const roleMenu: Record<string, string[]> = {
   owner: menu.map(item => item[0]),
   admin: menu.map(item => item[0]),
   manager: ["dashboard", "customers", "projects", "tasks", "employees", "timecards", "documents", "library", "calendar", "billing", "messages", "reports"],
   sales: ["dashboard", "customers", "projects", "tasks", "documents", "library", "calendar", "billing", "messages", "reports"],
-  support: ["dashboard", "customers", "projects", "tasks", "timecards", "forms", "documents", "library", "calendar", "messages"],
+  support: ["dashboard", "customers", "projects", "tasks", "timecards", "documents", "library", "calendar", "messages"],
   employee: ["dashboard", "projects", "tasks", "timecards", "documents", "library", "calendar"],
 };
 
-export default function CrmDashboard({ displayName, initialView = "dashboard" }: { displayName: string; initialView?: string }) {
-  const router = useRouter();
+export default function CrmDashboard({ displayName }: { displayName: string }) {
   const [pageOpenedAt] = useState(() => Date.now());
   const [leads, setLeads] = useState<Lead[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -77,12 +74,11 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState("open");
   const [query, setQuery] = useState("");
-  const [view, setView] = useState(initialView);
+  const [view, setView] = useState("dashboard");
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [showEmployeeForm, setShowEmployeeForm] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
-  const [employeeAccountMessage, setEmployeeAccountMessage] = useState("");
   const [clockEmployeeId, setClockEmployeeId] = useState<number | null>(null);
   const [timeMessage, setTimeMessage] = useState("");
   const [actor, setActor] = useState<Actor | null>(null);
@@ -99,7 +95,6 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
   const [billingCategory, setBillingCategory] = useState<BillingCategory>("open");
   const [billingSort, setBillingSort] = useState<{ key: BillingSortKey; direction: "asc" | "desc" }>({ key: "issueDate", direction: "desc" });
   const [showCustomerForm, setShowCustomerForm] = useState(false);
-  const [customerFocus, setCustomerFocus] = useState(false);
   const [customerMessage, setCustomerMessage] = useState("");
   const [showLinkedDocuments, setShowLinkedDocuments] = useState(false);
   const [portalMessage, setPortalMessage] = useState("");
@@ -159,12 +154,7 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
     const linkedLeadId = Number(params.get("lead"));
     setLeads(data.leads || []);
     setSelectedId(linkedLeadId || data.leads?.[0]?.id || null);
-    if (initialView === "customers" && linkedLeadId) setCustomerFocus(true);
-    if (["customers", "projects", "billing"].includes(params.get("view") || "")) {
-      const legacyView = params.get("view")!;
-      setView(legacyView);
-      router.replace(`${routeForView(legacyView)}${linkedLeadId ? `?lead=${linkedLeadId}` : ""}`);
-    }
+    if (["customers", "projects", "billing"].includes(params.get("view") || "")) setView(params.get("view")!);
   }).finally(() => setLoading(false)); }, []);
   useEffect(() => {
     Promise.all([
@@ -251,10 +241,7 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
 
   useEffect(() => {
     if (actor && !allowedMenuIds.includes(view)) {
-      const redirect = window.setTimeout(() => {
-        setView("dashboard");
-        router.replace("/crm");
-      }, 0);
+      const redirect = window.setTimeout(() => setView("dashboard"), 0);
       return () => window.clearTimeout(redirect);
     }
   }, [actor, view]);
@@ -374,22 +361,14 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
   }
 
   function openView(next: string) {
-    if (next === "forms") {
-      router.push("/crm/forms");
-      return;
-    }
     if (next !== view) setPreviousView(view);
     setView(next);
-    router.push(routeForView(next));
-    if (next === "customers") setCustomerFocus(false);
+    if (next === "customers" && !selectedId && leads[0]) setSelectedId(leads[0].id);
   }
   function openCustomer(leadId: number) {
     setSelectedId(leadId);
     setShowLinkedDocuments(false);
-    if (view !== "customers") setPreviousView(view);
-    setView("customers");
-    router.push(`/crm/customers?lead=${leadId}`);
-    setCustomerFocus(true);
+    openView("customers");
   }
   function openProject(leadId: number) {
     setSelectedId(leadId);
@@ -435,7 +414,6 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
     const destination = previousView === view ? "dashboard" : previousView;
     setPreviousView("dashboard");
     setView(destination);
-    router.push(routeForView(destination));
   }
   async function refreshInternalLibrary() {
     const data = await fetch("/api/internal-documents").then(response => response.json());
@@ -481,18 +459,6 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
     const response = await fetch("/api/employees", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: selectedEmployee.id, ...patch }) });
     const data = await response.json();
     if (response.ok) setEmployees(current => current.map(employee => employee.id === data.employee.id ? data.employee : employee));
-  }
-
-  async function employeeAccountAction(action: "send" | "remove") {
-    if (!selectedEmployee) return;
-    setEmployeeAccountMessage("");
-    const response = await fetch(`/api/employees/account${action === "remove" ? `?employeeId=${selectedEmployee.id}` : ""}`, {
-      method: action === "remove" ? "DELETE" : "POST",
-      headers: action === "send" ? { "Content-Type": "application/json" } : undefined,
-      body: action === "send" ? JSON.stringify({ employeeId: selectedEmployee.id }) : undefined,
-    });
-    const data = await response.json();
-    setEmployeeAccountMessage(data.message || data.error || "Account updated.");
   }
 
   async function refreshTimecards() {
@@ -797,16 +763,15 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
 
   return <main className="portal-shell">
     <aside className="portal-sidebar">
-      <div className="portal-brand" aria-label="Pixel Hutch Business Hutch"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch" /><span>BUSINESS HUTCH</span></div>
+      <Link href="/" className="portal-brand"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch" /><span>BUSINESS HUB</span></Link>
       <nav className="portal-menu" aria-label="Employee workspace">
-        {visibleMenu.map(([id, icon, label]) => <Link key={id} href={routeForView(id)} className={view === id ? "active" : ""} onClick={() => { if (id !== "forms") { setPreviousView(view); setView(id); } }}><i>{icon}</i><span>{label}</span>{comingSoon.has(id) && <small>SOON</small>}</Link>)}
+        {visibleMenu.map(([id, icon, label]) => <button key={id} className={view === id ? "active" : ""} onClick={() => openView(id)}><i>{icon}</i><span>{label}</span>{comingSoon.has(id) && <small>SOON</small>}</button>)}
       </nav>
-      <Link className="portal-exit-link" href="/">Exit to public website ↗</Link>
-      <div className="portal-user"><span>{displayName.slice(0, 1).toUpperCase()}</span><div><b>{displayName}</b><small>{actor?.role || "Owner"}</small></div><a aria-label="Sign out" href="/api/auth/logout?returnTo=/login">↗</a></div>
+      <div className="portal-user"><span>{displayName.slice(0, 1).toUpperCase()}</span><div><b>{displayName}</b><small>{actor?.role || "Owner"}</small></div><a aria-label="Sign out" href="/signout-with-chatgpt?return_to=/">↗</a></div>
     </aside>
 
     <section className="portal-main">
-      {testMode?.mode === "role" && <div className="test-mode-banner" role="status"><div><b>TEST MODE</b><span>You are viewing the Business Hutch as <strong>{testMode.role}</strong>. Your Owner permissions are temporarily hidden.</span></div><button onClick={exitTestMode}>Return to Owner</button></div>}
+      {testMode?.mode === "role" && <div className="test-mode-banner" role="status"><div><b>TEST MODE</b><span>You are viewing the Business Hub as <strong>{testMode.role}</strong>. Your Owner permissions are temporarily hidden.</span></div><button onClick={exitTestMode}>Return to Owner</button></div>}
       <header className="portal-topbar"><div><button className="mobile-menu" aria-label="Open navigation">☰</button><span>Pixel Hutch internal workspace</span></div><div className="notification-anchor"><button className="notification-button" aria-label={`${unreadNotifications} unread notifications`} onClick={() => setShowNotifications(current => !current)}>●{unreadNotifications > 0 && <b>{unreadNotifications}</b>}</button><span>{actor ? `${actor.role} access` : "Secure employee access"}</span>{showNotifications && <section className="notification-panel"><header><div><p className="crm-eyebrow">NOTIFICATIONS</p><h3>What needs attention</h3></div><button onClick={() => {setShowNotifications(false);openView("calendar");}}>Open calendar →</button></header>{notifications.length ? notifications.slice(0,8).map(item => <article key={item.key} className={`${item.read ? "is-read" : ""} ${item.urgency}`}><button onClick={() => notificationAction(item.key,"read")}><i>{item.type === "billing" ? "$" : item.type === "task" ? "✓" : item.type === "shift" ? "◷" : "□"}</i><span><b>{item.title}</b><small>{item.start.slice(0,10)} · {item.detail}</small></span><em>{item.urgency}</em></button><button aria-label={`Dismiss ${item.title}`} onClick={() => notificationAction(item.key,"dismiss")}>×</button></article>) : <div className="friendly-empty small"><span>✓</span><h3>You&apos;re caught up.</h3><p>No deadlines or events need attention.</p></div>}</section>}</div></header>
       {view !== "dashboard" && <div className="portal-backbar"><button onClick={goBack} aria-label={`Go back from ${menu.find(item => item[0] === view)?.[2] || "this page"}`}>← Back</button><span>Dashboard / {menu.find(item => item[0] === view)?.[2] || view}</span></div>}
 
@@ -844,10 +809,9 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
           <div className="customer-form-actions"><button type="button" className="crm-secondary-button" onClick={() => setShowCustomerForm(false)}>Cancel</button><button className="crm-primary-button">Add customer</button></div>
         </form>}
         {customerMessage && <p className="customer-message" role="status">{customerMessage}</p>}
-        {customerFocus && <div className="customer-focus-bar"><button onClick={() => setCustomerFocus(false)}>← All customers</button><span>{selected?.business}</span></div>}
-        <section className={`crm-workspace ${customerFocus ? "customer-focus" : "customer-directory"}`}>
-          <aside className="lead-list-panel"><div className="lead-tools"><input aria-label="Search customers" placeholder="Search customers…" value={query} onChange={e => setQuery(e.target.value)} /><select aria-label="Filter customers" value={filter} onChange={e => setFilter(e.target.value)}><option value="open">Open leads</option><option value="all">All customers</option>{stages.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select><select aria-label="Sort customers" value={customerSort} onChange={e => setCustomerSort(e.target.value as typeof customerSort)}><option value="created">Newest first</option><option value="business">Business A–Z</option><option value="contact">Contact A–Z</option><option value="status">Stage</option></select></div><div className="lead-list">{loading ? <p className="empty-leads">Loading customers…</p> : visible.length === 0 ? <div className="friendly-empty small"><span>+</span><h3>No customers here yet.</h3><p>New inquiries will appear automatically.</p></div> : visible.map(lead => <button key={lead.id} className={selectedId === lead.id ? "lead-row active" : "lead-row"} onClick={() => { setSelectedId(lead.id); setCustomerFocus(true); }}><i className={`status-dot ${lead.status}`} /><span><b>{lead.business}</b><small>{lead.name} · {lead.project}</small></span><time>{new Date(lead.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}</time></button>)}</div></aside>
-          <section className="lead-detail">{selected ? <><div className="lead-detail-head"><div><p className="crm-eyebrow">CUSTOMER #{selected.id}</p><h2>{selected.business}</h2><p>{selected.name} · <a href={`mailto:${selected.email}`}>{selected.email}</a>{selected.phone && <> · <a href={`tel:${selected.phone}`}>{selected.phone}</a></>}</p></div><button className="crm-primary-button" onClick={saveLead} disabled={saving}>{saving ? "Saving…" : "Save changes"}</button></div><section className="customer-record-shortcuts" aria-label="Related customer records"><header><span>CONNECTED WORK</span><p>Jump to this customer&apos;s project, forms, or billing history.</p></header><div><button onClick={() => openProject(selected.id)}><i>◇</i><span><small>PROJECT</small><b>{selected.project || "Customer project"}</b><em>{selectedProject ? `${selectedProject.status.replaceAll("_"," ")} · ${selectedProject.progress}% complete` : "Not started yet"}</em></span><strong>View project <b>→</b></strong></button><button onClick={() => router.push(`/crm/forms?customer=${selected.id}`)}><i>☑</i><span><small>FORMS &amp; APPROVALS</small><b>Customer forms</b><em>Create, review, send, and approve</em></span><strong>View forms <b>→</b></strong></button><button aria-expanded={showLinkedDocuments} onClick={() => setShowLinkedDocuments(current => !current)}><i>$</i><span><small>BILLING</small><b>{billingDocuments.filter(document => document.leadId === selected.id).length} {billingDocuments.filter(document => document.leadId === selected.id).length === 1 ? "document" : "documents"}</b><em>${(billingDocuments.filter(document => document.leadId === selected.id && document.kind === "invoice").reduce((sum,document)=>sum+Math.max(0,document.totalCents-document.paidCents),0)/100).toLocaleString(undefined,{minimumFractionDigits:2})} outstanding</em></span><strong>{showLinkedDocuments ? "Hide documents" : "View documents"} <b>{showLinkedDocuments ? "↑" : "↓"}</b></strong></button></div></section>
+        <section className="crm-workspace">
+          <aside className="lead-list-panel"><div className="lead-tools"><input aria-label="Search customers" placeholder="Search customers…" value={query} onChange={e => setQuery(e.target.value)} /><select aria-label="Filter customers" value={filter} onChange={e => setFilter(e.target.value)}><option value="open">Open leads</option><option value="all">All customers</option>{stages.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select><select aria-label="Sort customers" value={customerSort} onChange={e => setCustomerSort(e.target.value as typeof customerSort)}><option value="created">Newest first</option><option value="business">Business A–Z</option><option value="contact">Contact A–Z</option><option value="status">Stage</option></select></div><div className="lead-list">{loading ? <p className="empty-leads">Loading customers…</p> : visible.length === 0 ? <div className="friendly-empty small"><span>+</span><h3>No customers here yet.</h3><p>New inquiries will appear automatically.</p></div> : visible.map(lead => <button key={lead.id} className={selectedId === lead.id ? "lead-row active" : "lead-row"} onClick={() => setSelectedId(lead.id)}><i className={`status-dot ${lead.status}`} /><span><b>{lead.business}</b><small>{lead.name} · {lead.project}</small></span><time>{new Date(lead.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}</time></button>)}</div></aside>
+          <section className="lead-detail">{selected ? <><div className="lead-detail-head"><div><p className="crm-eyebrow">CUSTOMER #{selected.id}</p><h2>{selected.business}</h2><p>{selected.name} · <a href={`mailto:${selected.email}`}>{selected.email}</a>{selected.phone && <> · <a href={`tel:${selected.phone}`}>{selected.phone}</a></>}</p></div><button className="crm-primary-button" onClick={saveLead} disabled={saving}>{saving ? "Saving…" : "Save changes"}</button></div><section className="customer-record-shortcuts" aria-label="Related customer records"><header><span>CONNECTED WORK</span><p>Jump to this customer&apos;s project or billing history.</p></header><div><button onClick={() => openProject(selected.id)}><i>◇</i><span><small>PROJECT</small><b>{selected.project || "Customer project"}</b><em>{selectedProject ? `${selectedProject.status.replaceAll("_"," ")} · ${selectedProject.progress}% complete` : "Not started yet"}</em></span><strong>View project <b>→</b></strong></button><button aria-expanded={showLinkedDocuments} onClick={() => setShowLinkedDocuments(current => !current)}><i>$</i><span><small>BILLING</small><b>{billingDocuments.filter(document => document.leadId === selected.id).length} {billingDocuments.filter(document => document.leadId === selected.id).length === 1 ? "document" : "documents"}</b><em>${(billingDocuments.filter(document => document.leadId === selected.id && document.kind === "invoice").reduce((sum,document)=>sum+Math.max(0,document.totalCents-document.paidCents),0)/100).toLocaleString(undefined,{minimumFractionDigits:2})} outstanding</em></span><strong>{showLinkedDocuments ? "Hide documents" : "View documents"} <b>{showLinkedDocuments ? "↑" : "↓"}</b></strong></button></div></section>
           {showLinkedDocuments && <section className="customer-linked-documents"><header><div><p className="crm-eyebrow">LINKED DOCUMENTS</p><h3>Estimates & invoices</h3></div><button onClick={() => openDocuments(selected.id)}>View all documents →</button></header>{billingDocuments.filter(document => document.leadId === selected.id).length ? <div>{billingDocuments.filter(document => document.leadId === selected.id).map(document => <article key={document.id}><a href={`/crm/billing/${document.id}`} target="_blank" rel="noreferrer"><span><b>{document.number}</b><small>{document.kind} · {document.status}</small></span><strong>${(document.totalCents / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong><em>Open ↗</em></a></article>)}</div> : <p>No estimates or invoices are linked to this customer yet.</p>}</section>}
           <div className="lead-fields"><label>Stage<select value={selected.status} onChange={e => updateSelected({ status: e.target.value })}>{stages.map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label><label>Estimated value<input type="number" min="0" value={selected.estimatedValue} onChange={e => updateSelected({ estimatedValue: Number(e.target.value) })} /></label><label>Next follow-up<input type="date" value={selected.nextFollowUp || ""} onChange={e => updateSelected({ nextFollowUp: e.target.value || null })} /></label></div><div className="lead-brief"><article><span>PROJECT</span><b>{selected.project}</b></article><article><span>BUDGET</span><b>{selected.budget}</b></article><article><span>TIMELINE</span><b>{selected.timeline}</b></article><article><span>SOURCE</span><b>{selected.referral || "Not provided"}</b></article></div><div className="lead-message"><span>ORIGINAL INQUIRY</span><p>{selected.message}</p></div><label className="lead-notes">Working notes<textarea rows={7} placeholder="Conversation notes, next steps, quote details…" value={selected.notes} onChange={e => updateSelected({ notes: e.target.value })} /></label></> : <div className="no-selection"><span>PH</span><h2>Select a customer</h2><p>Choose a record to see contact details, project needs, and notes.</p></div>}</section>
         </section>
@@ -864,7 +828,7 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
             {showTaskForm && <form className="task-create-form" onSubmit={createTask}><label>Task title<input name="title" required autoFocus placeholder="Build homepage draft" /></label><label>Milestone<input name="milestone" required defaultValue="Build" /></label><label>Assigned to<select name="assignedEmployeeId" defaultValue=""><option value="">Unassigned</option>{employees.filter(employee => employee.status === "active").map(employee => <option key={employee.id} value={employee.id}>{employee.firstName} {employee.lastName}</option>)}</select></label><label>Priority<select name="priority" defaultValue="normal"><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></label><label>Due date<input name="dueDate" type="date" /></label><label className="task-description">Description<textarea name="description" rows={3} /></label><label className="portal-check"><input name="visibleToClient" type="checkbox" /><span>Visible in client portal</span></label><label className="portal-check"><input name="clientApprovalRequired" type="checkbox" /><span>Client approval required</span></label><div className="form-actions"><button type="button" className="crm-secondary-button" onClick={() => setShowTaskForm(false)}>Cancel</button><button className="crm-primary-button">Add task</button></div></form>}
             <div className="milestone-list">{Array.from(new Set(selectedProjectTasks.map(task => task.milestone))).map(milestone => { const tasks = selectedProjectTasks.filter(task => task.milestone === milestone); return <section key={milestone}><header><div><b>{milestone}</b><small>{tasks.filter(task => task.status === "done").length}/{tasks.length} complete</small></div><span>{Math.round(tasks.filter(task => task.status === "done").length / tasks.length * 100)}%</span></header>{tasks.map(task => { const assignee = taskAssignee(task); return <article key={task.id} className={`task-row ${task.status === "done" ? "is-done" : ""}`}><button className="task-check" aria-label={task.status === "done" ? `Reopen ${task.title}` : `Complete ${task.title}`} onClick={() => updateTask(task,{status:task.status === "done" ? "todo" : "done"})}>{task.status === "done" ? "✓" : ""}</button><div><b>{task.title}</b><small>{task.description || "No description"}{task.visibleToClient ? " · Client visible" : ""}{task.clientApprovalRequired ? " · Approval required" : ""}</small></div><em className={`priority-${task.priority}`}>{task.priority}</em><select aria-label={`Assign ${task.title}`} value={task.assignedEmployeeId || ""} disabled={!canManageProjects} onChange={event => updateTask(task,{assignedEmployeeId:Number(event.target.value) || null})}><option value="">Unassigned</option>{employees.filter(employee => employee.status === "active").map(employee => <option key={employee.id} value={employee.id}>{employee.firstName} {employee.lastName}</option>)}</select><input aria-label={`Due date for ${task.title}`} type="date" value={task.dueDate || ""} disabled={!canManageProjects} onChange={event => updateTask(task,{dueDate:event.target.value || null})} /><select aria-label={`Status for ${task.title}`} value={task.status} onChange={event => updateTask(task,{status:event.target.value})}><option value="todo">To do</option><option value="in_progress">In progress</option><option value="blocked">Blocked</option><option value="review">Review</option><option value="done">Done</option></select><span>{assignee ? `${assignee.firstName} ${assignee.lastName}` : "Needs owner"}</span></article>; })}</section>; })}</div>
           </section>
-          <aside className="project-settings-panel"><form onSubmit={updateProject}><p className="crm-eyebrow">PROJECT CONTROL</p><h3>Status & next step</h3><label>Status<select name="status" defaultValue={selectedProject.status}><option value="planning">Planning</option><option value="in_progress">In progress</option><option value="client_review">Client review</option><option value="complete">Complete</option><option value="on_hold">On hold</option></select></label><label>Current phase<input name="currentPhase" defaultValue={selectedProject.currentPhase} /></label><label>Next step<input name="nextStep" defaultValue={selectedProject.nextStep} /></label><label>Target date<input name="targetDate" type="date" defaultValue={selectedProject.targetDate || ""} /></label><label>Client-facing summary<textarea name="clientSummary" rows={5} defaultValue={selectedProject.clientSummary} /></label><label>Staging / dummy site URL<input name="previewUrl" type="url" placeholder="https://preview.example.com" defaultValue={selectedProject.previewUrl || ""} /></label><label className="portal-check"><input name="previewVisible" type="checkbox" defaultChecked={selectedProject.previewVisible} /><span>Show website preview in client portal</span></label>{canManageProjects && <button className="crm-primary-button">Save project</button>}</form><div className="project-linked-records"><button onClick={() => openCustomer(selectedProjectLead.id)}><span>◎</span><div><small>CUSTOMER</small><b>{selectedProjectLead.business}</b></div></button><button onClick={() => { setSelectedId(selectedProjectLead.id); openView("billing"); }}><span>$</span><div><small>BILLING</small><b>{billingDocuments.filter(document => document.leadId === selectedProjectLead.id).length} documents</b></div></button><button onClick={() => openDocuments(selectedProjectLead.id)}><span>▤</span><div><small>FILES</small><b>Project documents</b></div></button></div></aside></div>
+          <aside className="project-settings-panel"><form onSubmit={updateProject}><p className="crm-eyebrow">PROJECT CONTROL</p><h3>Status & next step</h3><label>Status<select name="status" defaultValue={selectedProject.status}><option value="planning">Planning</option><option value="in_progress">In progress</option><option value="client_review">Client review</option><option value="complete">Complete</option><option value="on_hold">On hold</option></select></label><label>Current phase<input name="currentPhase" defaultValue={selectedProject.currentPhase} /></label><label>Next step<input name="nextStep" defaultValue={selectedProject.nextStep} /></label><label>Target date<input name="targetDate" type="date" defaultValue={selectedProject.targetDate || ""} /></label><label>Client-facing summary<textarea name="clientSummary" rows={5} defaultValue={selectedProject.clientSummary} /></label>{canManageProjects && <button className="crm-primary-button">Save project</button>}</form><div className="project-linked-records"><button onClick={() => openCustomer(selectedProjectLead.id)}><span>◎</span><div><small>CUSTOMER</small><b>{selectedProjectLead.business}</b></div></button><button onClick={() => { setSelectedId(selectedProjectLead.id); openView("billing"); }}><span>$</span><div><small>BILLING</small><b>{billingDocuments.filter(document => document.leadId === selectedProjectLead.id).length} documents</b></div></button><button onClick={() => openDocuments(selectedProjectLead.id)}><span>▤</span><div><small>FILES</small><b>Project documents</b></div></button></div></aside></div>
         </section>}
         {selected && <section className="portal-manager"><header><div><p className="crm-eyebrow">CLIENT EXPERIENCE</p><h2>{selected.business} client portal</h2><p>Post updates and request the exact files needed to keep work moving.</p></div><a href={`/portal?project=${selected.id}`} target="_blank" rel="noreferrer">Open client view ↗</a></header>
           {portalMessage && <p className="portal-manager-message" role="status">{portalMessage}</p>}
@@ -904,7 +868,7 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
             <section><h3>Onboarding checklist</h3><p>Click an item to mark it complete or reopen it.</p>
               {[["taxFormsComplete","Tax forms","W-4 or contractor tax documentation"],["directDepositComplete","Direct deposit","Payroll payment information"],["handbookComplete","Employee handbook","Policies acknowledged"]].map(([key,title,copy]) => { const done = Boolean(selectedEmployee[key as keyof Employee]); return <button className={`onboarding-task ${done ? "done" : ""}`} key={key} onClick={() => updateEmployee({ [key]: !done } as Partial<Employee>)}><i>{done ? "✓" : ""}</i><span><b>{title}</b><small>{copy}</small></span><em>{done ? "Complete" : "Mark complete"}</em></button>; })}
             </section>
-            <section><h3>Employment & access</h3><div className="employee-fields"><label>Job title<input value={selectedEmployee.jobTitle} onChange={event => setEmployees(current => current.map(e => e.id === selectedEmployee.id ? {...e, jobTitle:event.target.value} : e))} onBlur={event => updateEmployee({jobTitle:event.target.value})} /></label><label>Department<input value={selectedEmployee.department} onChange={event => setEmployees(current => current.map(e => e.id === selectedEmployee.id ? {...e, department:event.target.value} : e))} onBlur={event => updateEmployee({department:event.target.value})} /></label><label>Access role<select value={selectedEmployee.role} onChange={event => updateEmployee({role:event.target.value})}><option value="employee">Employee</option><option value="support">Support / Technician</option><option value="sales">Sales</option><option value="manager">Manager</option><option value="admin">Admin</option><option value="owner">Owner</option></select></label><label>Status<select value={selectedEmployee.status} onChange={event => updateEmployee({status:event.target.value})}><option value="active">Active</option><option value="leave">On leave</option><option value="inactive">Inactive</option></select></label></div><div className="account-access-card"><b>Business Hutch account</b><p>The employee’s email is their username. Send a secure link to create or reset their password.</p><div><button className="crm-primary-button" onClick={() => employeeAccountAction("send")}>Send setup / reset link</button><button className="crm-secondary-button" onClick={() => employeeAccountAction("remove")}>Remove account access</button></div>{employeeAccountMessage && <small role="status">{employeeAccountMessage}</small>}</div></section>
+            <section><h3>Employment & access</h3><div className="employee-fields"><label>Job title<input value={selectedEmployee.jobTitle} onChange={event => setEmployees(current => current.map(e => e.id === selectedEmployee.id ? {...e, jobTitle:event.target.value} : e))} onBlur={event => updateEmployee({jobTitle:event.target.value})} /></label><label>Department<input value={selectedEmployee.department} onChange={event => setEmployees(current => current.map(e => e.id === selectedEmployee.id ? {...e, department:event.target.value} : e))} onBlur={event => updateEmployee({department:event.target.value})} /></label><label>Access role<select value={selectedEmployee.role} onChange={event => updateEmployee({role:event.target.value})}><option value="employee">Employee</option><option value="support">Support / Technician</option><option value="sales">Sales</option><option value="manager">Manager</option><option value="admin">Admin</option><option value="owner">Owner</option></select></label><label>Status<select value={selectedEmployee.status} onChange={event => updateEmployee({status:event.target.value})}><option value="active">Active</option><option value="leave">On leave</option><option value="inactive">Inactive</option></select></label></div></section>
             <section><h3>Payroll setup</h3><div className="employee-fields"><label>Employment type<select value={selectedEmployee.employmentType} onChange={event => updateEmployee({employmentType:event.target.value})}><option value="hourly">Hourly</option><option value="salary">Salary</option><option value="contractor">Contractor</option></select></label><label>Pay frequency<select value={selectedEmployee.payFrequency} onChange={event => updateEmployee({payFrequency:event.target.value})}><option value="weekly">Weekly</option><option value="biweekly">Every two weeks</option><option value="semimonthly">Twice monthly</option><option value="monthly">Monthly</option></select></label><label>Pay rate<input type="number" step=".01" value={selectedEmployee.payRateCents / 100} onChange={event => setEmployees(current => current.map(e => e.id === selectedEmployee.id ? {...e, payRateCents:Math.round(Number(event.target.value)*100)} : e))} onBlur={event => updateEmployee({payRateCents:Math.round(Number(event.target.value)*100)})} /></label><label>PTO balance (hours)<input type="number" step=".25" value={(selectedEmployee.ptoMinutes || 0) / 60} onChange={event => updateEmployee({ptoMinutes:Math.round(Number(event.target.value)*60)} as Partial<Employee>)} /></label></div></section>
           </div>
         </div>}
@@ -978,10 +942,10 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
 
       {view === "reports" && <div className="portal-page reports-page">
         <header className="report-print-cover">
-          <div><p>PIXEL HUTCH BUSINESS HUTCH</p><h1>Business performance report</h1><span>{reportRangeLabel} · {reportCustomerLabel}</span></div>
-          <aside><b>{new Date().toLocaleDateString([], {month:"long",day:"numeric",year:"numeric"})}</b><span>Prepared from live Business Hutch records</span></aside>
+          <div><p>PIXEL HUTCH BUSINESS HUB</p><h1>Business performance report</h1><span>{reportRangeLabel} · {reportCustomerLabel}</span></div>
+          <aside><b>{new Date().toLocaleDateString([], {month:"long",day:"numeric",year:"numeric"})}</b><span>Prepared from live Business Hub records</span></aside>
         </header>
-        <div className="portal-page-head"><div><p className="crm-eyebrow">BUSINESS INTELLIGENCE</p><h1>Reports &amp; analytics</h1><p>See where work, customers, and money stand—using the records already connected across the Business Hutch.</p></div><div className="report-head-actions"><button className="crm-secondary-button" onClick={() => window.print()}>Print / Save PDF</button><button className="crm-primary-button" onClick={exportReport}>Export CSV</button></div></div>
+        <div className="portal-page-head"><div><p className="crm-eyebrow">BUSINESS INTELLIGENCE</p><h1>Reports &amp; analytics</h1><p>See where work, customers, and money stand—using the records already connected across the Business Hub.</p></div><div className="report-head-actions"><button className="crm-secondary-button" onClick={() => window.print()}>Print / Save PDF</button><button className="crm-primary-button" onClick={exportReport}>Export CSV</button></div></div>
         <section className="report-controls">
           <label>Date range<select value={reportRange} onChange={event => setReportRange(event.target.value)}><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="365">Last 12 months</option><option value="all">All time</option></select></label>
           <label>Customer<select value={reportCustomer} onChange={event => setReportCustomer(event.target.value)}><option value="all">All customers</option>{leads.map(lead => <option key={lead.id} value={lead.id}>{lead.business || lead.name}</option>)}</select></label>
@@ -1024,7 +988,7 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
       </div>}
 
       {view === "settings" && <div className="portal-page settings-page">
-        <div className="portal-page-head"><div><p className="crm-eyebrow">BUSINESS HUTCH CONTROL CENTER</p><h1>Settings</h1><p>Control company identity, billing rules, alerts, client access, and employee permissions from one place.</p></div>{settings?.updatedAt && <div className="settings-last-saved"><span>LAST UPDATED</span><b>{new Date(settings.updatedAt).toLocaleString()}</b><small>{settings.updatedBy}</small></div>}</div>
+        <div className="portal-page-head"><div><p className="crm-eyebrow">BUSINESS HUB CONTROL CENTER</p><h1>Settings</h1><p>Control company identity, billing rules, alerts, client access, and employee permissions from one place.</p></div>{settings?.updatedAt && <div className="settings-last-saved"><span>LAST UPDATED</span><b>{new Date(settings.updatedAt).toLocaleString()}</b><small>{settings.updatedBy}</small></div>}</div>
         {!canManage && <div className="settings-restricted"><span>⚙</span><div><b>Owner or admin access required</b><p>You can review the current company preferences, but only an Owner or Admin can change business-wide settings.</p></div></div>}
         {settings ? <form className="settings-workspace" onSubmit={saveSettings} style={{"--settings-accent":settings.accentColor} as CSSProperties}>
           <nav aria-label="Settings categories">{([["company","Company"],["services","Services & pricing"],["billing","Billing"],["notifications","Notifications"],["portal","Client portal"],["access","Roles & access"]] as const).map(([id,label]) => <button type="button" key={id} className={settingsTab === id ? "active" : ""} onClick={() => setSettingsTab(id)}><span>{id === "company" ? "⌂" : id === "services" ? "◇" : id === "billing" ? "$" : id === "notifications" ? "◉" : id === "portal" ? "◎" : "♙"}</span>{label}</button>)}</nav>
@@ -1064,7 +1028,7 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
               </div>}
               {testAccessMessage && <p className="customer-message" role="status">{testAccessMessage}</p>}
               <div className="role-matrix"><header><span>ROLE</span><span>CUSTOMERS</span><span>PROJECTS</span><span>BILLING</span><span>TEAM / SETTINGS</span></header>{[["Owner","Full","Full","Full + cancel","Full"],["Admin","Full","Full","Full + cancel","Full"],["Manager","Operational view","Full","View","Team"],["Sales","Create & edit","Create & edit","Create & edit","No"],["Support","View","Create & edit","No","No"],["Employee","Assigned only","Assigned tasks","No","No"]].map(row => <article key={row[0]}>{row.map((cell,index) => index ? <span key={cell}>{cell}</span> : <b key={cell}>{cell}</b>)}</article>)}</div><button type="button" className="crm-secondary-button" onClick={() => openView("employees")}>Manage employee accounts →</button>
-              <div className="access-safety-note"><b>How access stays safe</b><ul><li>Only the Owner can start Test Mode.</li><li>Test sessions expire automatically after two hours.</li><li>A persistent banner shows whenever another role is active.</li><li>Starting and ending test sessions is recorded in the Activity Log.</li><li>Suspending an employee blocks their Business Hutch access immediately.</li></ul></div>
+              <div className="access-safety-note"><b>How access stays safe</b><ul><li>Only the Owner can start Test Mode.</li><li>Test sessions expire automatically after two hours.</li><li>A persistent banner shows whenever another role is active.</li><li>Starting and ending test sessions is recorded in the Activity Log.</li><li>Suspending an employee blocks their Business Hub access immediately.</li></ul></div>
             </section>
             {canManage && <footer><div>{settingsMessage && <p role="status">{settingsMessage}</p>}<small>Settings changes are recorded in the Activity Log.</small></div><button className="crm-primary-button">Save all settings</button></footer>}
           </div>
@@ -1072,7 +1036,7 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
       </div>}
 
       {view === "activity" && canManage && <div className="portal-page"><div className="portal-page-head"><div><p className="crm-eyebrow">OWNER & ADMIN ONLY</p><h1>Activity log</h1><p>A read-only record of sign-ins, edits, approvals, timekeeping, and permission changes.</p></div></div><section className="activity-table"><header><span>WHO</span><span>ACTION</span><span>DETAIL</span><span>WHEN</span></header>{activity.map(item => <article key={item.id}><div><b>{item.actorName}</b><small>{item.actorRole} · {item.actorEmail}</small></div><em>{item.action.replaceAll("."," ")}</em><p>{item.summary}</p><time>{new Date(item.createdAt).toLocaleString()}</time></article>)}</section></div>}
-      {view === "activity" && !canManage && <div className="portal-page module-page"><p className="crm-eyebrow">RESTRICTED</p><div className="module-icon">◉</div><h1>Activity log</h1><p>Only owners and administrators can view employee activity history.</p><button className="crm-primary-button" onClick={() => openView("dashboard")}>Back to dashboard</button></div>}
+      {view === "activity" && !canManage && <div className="portal-page module-page"><p className="crm-eyebrow">RESTRICTED</p><div className="module-icon">◉</div><h1>Activity log</h1><p>Only owners and administrators can view employee activity history.</p><button className="crm-primary-button" onClick={() => setView("dashboard")}>Back to dashboard</button></div>}
 
       {view === "billing" && <div className="portal-page">
         <div className="portal-page-head"><div><p className="crm-eyebrow">SALES & ACCOUNTS RECEIVABLE</p><h1>Quotes & invoices</h1><p>Create estimates, collect deposits, track balances, and manage recurring support plans.</p></div><button className={showBillingForm ? "crm-secondary-button" : "crm-primary-button"} disabled={!leads.length} title={!leads.length ? "Add a customer first" : undefined} onClick={() => setShowBillingForm(!showBillingForm)}>{showBillingForm ? "Cancel" : "+ New document"}</button></div>
@@ -1111,7 +1075,7 @@ export default function CrmDashboard({ displayName, initialView = "dashboard" }:
       {correctionEntry && <div className="clock-prompt-backdrop"><form className="clock-prompt correction-form" onSubmit={requestCorrection}><p className="crm-eyebrow">MISSED PUNCH CORRECTION</p><h2>Request a time change</h2><label>Correct clock in<input name="clockIn" type="datetime-local" defaultValue={correctionEntry.clockIn.slice(0,16)} required /></label><label>Correct clock out<input name="clockOut" type="datetime-local" defaultValue={correctionEntry.clockOut?.slice(0,16)} required /></label><label>Reason<textarea name="reason" rows={3} required placeholder="Explain what needs to be corrected…" /></label><div><button className="crm-primary-button">Send request</button><button type="button" onClick={() => setCorrectionEntry(null)}>Cancel</button></div></form></div>}
       {documentToCancel && <div className="clock-prompt-backdrop"><section className="clock-prompt cancel-dialog" role="alertdialog" aria-modal="true" aria-labelledby="cancel-document-title"><span>!</span><p className="crm-eyebrow">OWNER / ADMIN ACTION</p><h2 id="cancel-document-title">Cancel {documentToCancel.number}?</h2><p>This removes the document from active billing totals but keeps it in the record and activity log. This action does not refund any recorded payment.</p><div><button className="danger-button" onClick={cancelBillingDocument}>Cancel document</button><button onClick={() => setDocumentToCancel(null)}>Keep document</button></div></section></div>}
 
-      {comingSoon.has(view) && <div className="portal-page module-page"><p className="crm-eyebrow">PIXEL HUTCH BUSINESS HUTCH</p><div className="module-icon">{menu.find(item => item[0] === view)?.[1]}</div><h1>{menu.find(item => item[0] === view)?.[2]}</h1><p>This section is part of the approved Business Hutch roadmap. Its navigation is in place now, and we&apos;ll build the real workflow when this module comes up next.</p><button className="crm-primary-button" onClick={() => openView("dashboard")}>Back to dashboard</button></div>}
+      {comingSoon.has(view) && <div className="portal-page module-page"><p className="crm-eyebrow">PIXEL HUTCH BUSINESS HUB</p><div className="module-icon">{menu.find(item => item[0] === view)?.[1]}</div><h1>{menu.find(item => item[0] === view)?.[2]}</h1><p>This section is part of the approved business-hub roadmap. Its navigation is in place now, and we&apos;ll build the real workflow when this module comes up next.</p><button className="crm-primary-button" onClick={() => setView("dashboard")}>Back to dashboard</button></div>}
     </section>
   </main>;
 }

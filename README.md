@@ -1,102 +1,108 @@
-# Pixel Hutch Website and Business Hub
+# vinext-starter
 
-This repository contains the complete Pixel Hutch public website, employee
-Business Hub, and client portal.
+A clean full-stack starter running on
+[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
+Drizzle support.
 
-## Included
+## Prerequisites
 
-- Public marketing website
-- Employee login and role-based Business Hub
-- Client portal
-- Leads, customers, projects, tasks, schedules, and timecards
-- Estimates, invoices, payments, and reports
-- Messaging and project files
-- Settings, service pricing, access management, and test mode
-- Privacy Policy and Terms pages
+- Node.js `>=22.13.0`
+- Linux with `flock`, `curl`, and GNU `timeout`
 
-## Technology
+## Sites Lifecycle
 
-- React 19
-- Next.js 16
-- Vinext/Vite
-- TypeScript
-- Cloudflare D1 with Drizzle ORM
-- Cloudflare R2-compatible file storage
-- Optional Resend email delivery
+The Sites lifecycle CLI runs the locked dependency install before returning this checkout. Edit the source under `app/`, then checkpoint when a coherent milestone is ready to inspect or share. The remote Sites builder runs `npm run build` against the pushed commit. Do not repeat install or build as a normal pre-checkpoint step.
 
-## Upload to GitHub
+This starter does not use `wrangler.jsonc`.
 
-1. Extract the ZIP.
-2. Create a new empty repository on GitHub.
-3. Open the extracted folder in VS Code.
-4. In the VS Code terminal, run:
+`install:ci` is intentionally a single, non-retrying `npm ci`. It refuses a concurrent install for the same project, consumes a matching image-seeded npm cache with `--prefer-offline` while retaining registry fallback for a missing cache object, otherwise downloads and verifies the complete vinext tarball recorded in `package-lock.json`, limits npm to one socket, and terminates a stalled install. `build` applies a short timeout and then validates the Sites artifact. These helpers target Linux and use GNU `timeout`; they are not native macOS scripts.
 
-```bash
-git init
-git add .
-git commit -m "Initial Pixel Hutch website and Business Hub"
-git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
-git push -u origin main
+Scripts that need writable project-scoped home, npm, XDG, and temporary paths use `scripts/sites-env.sh`. The `dev` and `start` scripts honor the caller's runtime environment and keep Wrangler logs inside the checkout. The generated `.sites-runtime/` directory is disposable and ignored by Git.
+
+## Included Shape
+
+- edit site code under `app/`
+- `app/chatgpt-auth.ts` provides optional dispatch-owned ChatGPT sign-in helpers
+- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
+- `vite.config.ts` simulates declared bindings for local development
+- `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
+- `db/schema.ts` starts intentionally empty
+- `examples/d1/` contains an optional D1 example surface
+- `drizzle.config.ts` supports local migration generation when needed
+
+## Workspace Auth Headers
+
+OpenAI workspace sites can read the current user's email from
+`oai-authenticated-user-email`.
+
+SIWC-authenticated workspace sites may also receive
+`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
+`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
+`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+
+Treat the full name as optional and fall back to email when it is absent:
+
+```tsx
+import { headers } from "next/headers";
+
+export default async function Home() {
+  const requestHeaders = await headers();
+  const email = requestHeaders.get("oai-authenticated-user-email");
+  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
+  const fullName =
+    encodedFullName &&
+    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
+      "percent-encoded-utf-8"
+      ? decodeURIComponent(encodedFullName)
+      : null;
+
+  const displayName = fullName ?? email;
+  // ...
+}
 ```
 
-Do not add a README, license, or `.gitignore` when creating the empty GitHub
-repository, because this project already includes them where needed.
+## Optional Dispatch-Owned ChatGPT Sign-In
 
-## Run locally
+Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
+optional or required ChatGPT sign-in:
 
-Requirements:
+- Use `getChatGPTUser()` for optional signed-in UI.
+- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
+  anonymous visitors through Sign in with ChatGPT.
+- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
+  browser links or actions.
+- Pass a same-origin relative `returnTo` path for the destination after sign-in
+  or sign-out. The helper validates and safely encodes it.
+- Mark protected pages with `export const dynamic = "force-dynamic"` because
+  they depend on per-request identity headers.
 
-- Node.js 22.13 or newer
-- npm
+Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
+OAuth cookies, and identity header injection. Do not implement app routes for
+those reserved paths. Routes that do not import and call the helper remain
+anonymous-compatible.
 
-Install and start the development server:
+SIWC establishes identity only; it does not prove workspace membership. Use the
+Sites hosting platform's access policy controls for workspace-wide restrictions,
+or enforce explicit server-side membership or allowlist checks.
 
-```bash
-npm install
-npm run dev
-```
+Use SIWC for account pages, user-specific dashboards, saved records, and write
+actions tied to the current ChatGPT user. Leave public content anonymous.
 
-The application will use locally simulated database and storage bindings during
-development.
+## Diagnostic Commands
 
-## Environment variables
+- `npm run install:ci`: perform the one bounded lockfile install
+- `npm run dev`: start the Vite/Vinext development server
+- `npm run build`: build and validate the deployable Sites artifact
+- `npm run start`: start the built Vinext application
+- `npm test`: build, validate, and verify the rendered development-preview metadata
+- `npm run validate:artifact`: recheck an existing artifact's manifest and ESM `default.fetch` export
+- `npm run db:generate`: generate Drizzle migrations after schema changes
 
-Copy `.env.example` to `.env.local` only when email delivery is needed:
+Use build and validation commands for targeted diagnosis after a remote failure, not as part of the normal checkpoint path.
 
-```bash
-cp .env.example .env.local
-```
+The timeout defaults can be overridden for a controlled canary with `SITES_INSTALL_TIMEOUT`, `SITES_INSTALL_KILL_AFTER`, `SITES_BUILD_TIMEOUT`, and `SITES_BUILD_KILL_AFTER`. A timeout fails the command; the helpers never retry an unchanged install or build.
 
-Add the Resend API key to `.env.local`. Environment files are excluded from
-Git, so secrets are not uploaded to GitHub.
+## Learn More
 
-## Database
-
-The schema is in `db/schema.ts`, and database migrations are in `drizzle/`.
-The application expects a D1 binding named `DB`.
-
-## File storage
-
-Uploads expect an R2-compatible storage binding named `BUCKET`.
-
-## Deployment note
-
-This project is currently configured for the ChatGPT Sites/Cloudflare runtime.
-Uploading it to GitHub preserves the full source and gives you version control,
-but GitHub itself does not run the application.
-
-The public pages could be converted for Netlify, but the Business Hub also
-needs a production database, object storage, authentication headers, and server
-routes. Keep the current hosted version online until those services are
-intentionally migrated.
-
-## Useful commands
-
-```bash
-npm run dev
-npm run lint
-npm run build
-npm test
-npm run db:generate
-```
+- [vinext Documentation](https://github.com/cloudflare/vinext)
+- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)

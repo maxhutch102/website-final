@@ -2,7 +2,7 @@ import { getChatGPTUser } from "@/app/chatgpt-auth";
 import { getDb } from "@/db";
 import { getTestAccessSession, logActivity, requireAccess, isAccessResponse } from "@/db/access";
 import {
-  billingDocuments, clientAccounts, clientForms, clientProjects, employees, fileRequests, formEvents, formTemplates, leads,
+  billingDocuments, clientProjects, employees, fileRequests, leads,
   payments, projectFiles, projectMessages, projectTasks, projectUpdates,
 } from "@/db/schema";
 import { and, desc, eq, inArray } from "drizzle-orm";
@@ -23,12 +23,7 @@ async function authorize(leadId: number) {
     return { error: Response.json({ error: "This test client session is linked to a different customer." }, { status: 403 }) };
   }
   const testClient = testSession?.mode === "client" && testSession.leadId === leadId;
-  const [clientAccount] = await db.select().from(clientAccounts)
-    .where(eq(clientAccounts.leadId, leadId)).limit(1);
-  const isClient = (
-    clientAccount?.status === "active"
-    && clientAccount.email.toLowerCase() === user.email.toLowerCase()
-  ) || testClient;
+  const isClient = lead.email.toLowerCase() === user.email.toLowerCase() || testClient;
   if (!employee && !bootstrapOwner && !isClient) {
     return { error: Response.json({ error: "This project is not connected to your account." }, { status: 403 }) };
   }
@@ -61,15 +56,13 @@ export async function GET(request: Request) {
   const access = await authorize(leadId);
   if ("error" in access) return access.error;
   const project = await ensureProject(leadId);
-  const [updates, requests, files, billing, messages, tasks, forms, templates] = await Promise.all([
+  const [updates, requests, files, billing, messages, tasks] = await Promise.all([
     access.db.select().from(projectUpdates).where(eq(projectUpdates.projectId, project.id)).orderBy(desc(projectUpdates.createdAt)),
     access.db.select().from(fileRequests).where(eq(fileRequests.projectId, project.id)).orderBy(desc(fileRequests.createdAt)),
     access.db.select().from(projectFiles).where(eq(projectFiles.projectId, project.id)).orderBy(desc(projectFiles.createdAt)),
     access.db.select().from(billingDocuments).where(eq(billingDocuments.leadId, leadId)).orderBy(desc(billingDocuments.createdAt)),
     access.db.select().from(projectMessages).where(eq(projectMessages.projectId, project.id)).orderBy(projectMessages.createdAt),
     access.db.select().from(projectTasks).where(eq(projectTasks.projectId, project.id)).orderBy(projectTasks.createdAt),
-    access.db.select().from(clientForms).where(eq(clientForms.leadId, leadId)).orderBy(desc(clientForms.updatedAt)),
-    access.db.select().from(formTemplates),
   ]);
   const paymentHistory = billing.length
     ? await access.db.select().from(payments)
@@ -86,8 +79,6 @@ export async function GET(request: Request) {
     payments: paymentHistory,
     messages,
     tasks: access.isStaff ? tasks : tasks.filter(item => item.visibleToClient),
-    forms: access.isStaff ? forms : forms.filter(item => item.customerVisible && item.status !== "archived"),
-    formTemplates: templates,
   });
 }
 
@@ -156,55 +147,10 @@ export async function POST(request: Request) {
     }
     return Response.json({ ok: true, message: savedMessage });
   }
-  if (body.action === "submitForm") {
-    const formId = Number(body.formId);
-    const [clientForm] = await access.db.select().from(clientForms)
-      .where(and(eq(clientForms.id, formId), eq(clientForms.leadId, leadId))).limit(1);
-    if (!clientForm || (!access.isStaff && !clientForm.customerVisible)) {
-      return Response.json({ error: "That form is not available in this portal." }, { status: 404 });
-    }
-    if (!access.isStaff && !clientForm.customerCanEdit) {
-      return Response.json({ error: "This form is available for review only." }, { status: 403 });
-    }
-    const [template] = await access.db.select().from(formTemplates).where(eq(formTemplates.id, clientForm.templateId)).limit(1);
-    if (!template) return Response.json({ error: "Form template not found." }, { status: 409 });
-    let fields: Array<{id:string;type:string;required?:boolean}> = [];
-    try { fields = JSON.parse(template.schemaJson); } catch {}
-    const source = body.values && typeof body.values === "object" ? body.values as Record<string,unknown> : {};
-    const values:Record<string,string|boolean> = {};
-    for (const field of fields) {
-      const value = field.type === "checkbox" ? Boolean(source[field.id]) : String(source[field.id] ?? "").trim().slice(0, field.type === "textarea" ? 12000 : 1000);
-      if (field.required && (value === "" || value === false)) {
-        return Response.json({ error: `Complete the required field before submitting.` }, { status: 400 });
-      }
-      values[field.id] = value;
-    }
-    const signatureName = String(body.signatureName || "").trim().slice(0, 200);
-    if (template.requiresSignature && !signatureName) {
-      return Response.json({ error: "Type your full legal name to sign this form." }, { status: 400 });
-    }
-    const nextStatus = template.requiresSignature ? "signed" : "completed";
-    const [saved] = await access.db.update(clientForms).set({
-      valuesJson: JSON.stringify(values), status: nextStatus, revision: clientForm.revision + 1,
-      signatureName: signatureName || clientForm.signatureName,
-      signedAt: template.requiresSignature ? now : clientForm.signedAt,
-      updatedBy: access.user.email.toLowerCase(), updatedAt: now,
-    }).where(eq(clientForms.id, clientForm.id)).returning();
-    await access.db.insert(formEvents).values({
-      formId: clientForm.id, eventType: nextStatus, actorEmail: access.user.email.toLowerCase(),
-      actorName: access.user.displayName, note: template.requiresSignature ? "Customer signed and submitted the form." : "Customer completed the form.",
-      createdAt: now,
-    });
-    return Response.json({ ok:true, form:saved });
-  }
   if (!access.isStaff || !["owner", "admin", "sales", "support"].includes(access.role)) {
     return Response.json({ error: "Only authorized employees can update project details." }, { status: 403 });
   }
   if (body.action === "updateProject") {
-    const previewUrl = String(body.previewUrl ?? project.previewUrl ?? "").trim().slice(0, 2000);
-    if (previewUrl && !/^https:\/\/[^\s]+$/i.test(previewUrl)) {
-      return Response.json({ error: "Preview URL must be a secure https:// address." }, { status: 400 });
-    }
     await access.db.update(clientProjects).set({
       status: String(body.status || project.status),
       progress: Math.max(0, Math.min(100, Number(body.progress) || 0)),
@@ -212,8 +158,6 @@ export async function POST(request: Request) {
       nextStep: String(body.nextStep || ""),
       targetDate: body.targetDate || null,
       clientSummary: String(body.clientSummary || ""),
-      previewUrl,
-      previewVisible: body.previewVisible === true || body.previewVisible === "on",
       updatedAt: now,
     }).where(eq(clientProjects.id, project.id));
   } else if (body.action === "addUpdate") {

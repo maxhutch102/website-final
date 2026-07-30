@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { chatGPTSignInPath, getChatGPTUser } from "@/app/chatgpt-auth";
 
 export const dynamic = "force-dynamic";
 export const metadata = { robots: { index: false, follow: false } };
@@ -7,7 +7,7 @@ export const metadata = { robots: { index: false, follow: false } };
 export default async function ClientLoginPage({
   searchParams,
 }: {
-    searchParams: Promise<{ project?: string; sent?: string; error?: string; email?: string }>;
+  searchParams: Promise<{ project?: string }>;
 }) {
   const user = await getChatGPTUser();
   const params = await searchParams;
@@ -29,29 +29,9 @@ export default async function ClientLoginPage({
       </div>
       {user
         ? <Link className="crm-primary-button login-action" href={portalPath}>Open client portal</Link>
-        : params.sent
-          ? <p className="auth-success">If that email belongs to an active client account, a password-reset link is on its way.</p>
-          : <form className="auth-form" action="/api/auth/client-login" method="post">
-              <input type="hidden" name="returnTo" value={portalPath} />
-              <label>Email address<input name="email" type="email" autoComplete="email" defaultValue={params.email || ""} required /></label>
-              <label>Password<input name="password" type="password" autoComplete="current-password" required /></label>
-              <button className="crm-primary-button login-action">Sign in to client portal</button>
-            </form>}
-      {!user && !params.sent && <form className="client-password-reset" action="/api/auth/request-link" method="post">
-        <input type="hidden" name="type" value="client-password-reset" />
-        <input type="hidden" name="returnTo" value={portalPath} />
-        <label>Forgot your password?
-          <span className="client-reset-row">
-            <input name="email" type="email" autoComplete="email" placeholder="Email address" required />
-            <button type="submit">Send reset link</button>
-          </span>
-        </label>
-      </form>}
-      {params.error === "invalid" && <p className="auth-error">That email and password combination is not valid.</p>}
-      {params.error === "expired" && <p className="auth-error">That link expired or was already used. Request another one.</p>}
-      {params.error === "account" && <p className="auth-error">We could not find the client account connected to that invitation.</p>}
+        : <a className="crm-primary-button login-action" href={chatGPTSignInPath(portalPath)}>Sign in to your portal</a>}
       <p className="employee-login-help">Use the email address connected to your Pixel Hutch customer account. Need help? Contact your Pixel Hutch representative.</p>
-          <Link className="login-switch-link" href="/login">Pixel Hutch employee? Use the Business Hutch login →</Link>
+      <Link className="login-switch-link" href="/login">Pixel Hutch employee? Use the Business Hub login →</Link>
     </section>
     <aside className="employee-login-aside client-login-aside" aria-hidden="true">
       <div className="client-login-status">

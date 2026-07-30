@@ -2,8 +2,6 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 
 import { ReactNode, useEffect, useRef, useState } from "react";
-import SiteFooter from "../site-footer";
-import SiteHeader from "../site-header";
 
 function PixelReveal({ children, className = "" }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -23,7 +21,7 @@ function PixelReveal({ children, className = "" }: { children: ReactNode; classN
 const projects = [
   {
     eyebrow: "CUSTOM CRM + CLIENT PORTAL",
-    title: "Pixel Hutch Business Hutch",
+    title: "Pixel Hutch Business Hub",
     status: "Private beta",
     copy: "One connected system for leads, customers, projects, tasks, estimates, invoices, files, client communication, schedules, reporting, and daily business administration.",
     deliverables: ["Customer-first CRM", "Projects and task workflows", "Billing and client portal", "Reports, files, and scheduling"],
@@ -58,7 +56,13 @@ const projects = [
 export default function WorkPage() {
   return (
     <main>
-      <SiteHeader active="work" />
+      <header className="site-header">
+        <a className="brand" href="/" aria-label="Pixel Hutch home"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch, precision solutions for your business" /></a>
+        <nav aria-label="Primary navigation">
+          <a href="/services">Services &amp; Pricing</a><a className="nav-active" href="/work">Our work</a><a href="/#process">Process</a><a href="/about">About</a>
+        </nav>
+        <a className="button button-small" href="/contact">Let&apos;s talk <span aria-hidden="true">↗</span></a>
+      </header>
 
       <section className="work-hero section-shell" id="top">
         <div>
@@ -83,7 +87,7 @@ export default function WorkPage() {
                 {project.visual === "lady-t" && <div className="lt-scene"><span>CREATE<br />SOMETHING<br /><em>BEAUTIFUL.</em></span><div><i /><i /><i /></div></div>}
                 {project.visual === "pixel-hutch" && <div className="ph-scene"><img src="/pixel-hutch-logo.svg" alt="" /><strong>BUILD A<br /><em>BETTER</em><br />BUSINESS.</strong><i /></div>}
                 {project.visual === "hutch-pizza" && <div className="hp-scene"><div><b>H</b><i /></div><strong>WOOD FIRED.<br />FAMILY MADE.</strong></div>}
-                {project.visual === "business-hub" && <div className="hub-scene"><aside><b>PH</b><i /><i /><i /><i /></aside><section><header><span>BUSINESS HUTCH</span><em>● LIVE</em></header><div className="hub-scene-stats"><i /><i /><i /></div><div className="hub-scene-grid"><strong /><span /></div></section></div>}
+                {project.visual === "business-hub" && <div className="hub-scene"><aside><b>PH</b><i /><i /><i /><i /></aside><section><header><span>BUSINESS HUB</span><em>● LIVE</em></header><div className="hub-scene-stats"><i /><i /><i /></div><div className="hub-scene-grid"><strong /><span /></div></section></div>}
               </div>
             </PixelReveal>
             <div className="portfolio-copy">
@@ -91,6 +95,7 @@ export default function WorkPage() {
               <h2>{project.title}</h2>
               <p>{project.copy}</p>
               <div className="portfolio-deliverables">{project.deliverables.map(item => <span key={item}>{item}</span>)}</div>
+              {project.visual === "business-hub" && <a className="button button-small" href="/crm-demo">Try the CRM demo <span aria-hidden="true">↗</span></a>}
             </div>
           </article>
         ))}
@@ -106,7 +111,7 @@ export default function WorkPage() {
 
       <section className="services-cta section-shell"><div><p className="kicker kicker-light">YOUR BUSINESS COULD BE NEXT</p><h2>Let&apos;s build something<br />worth showing off.</h2></div><a className="button button-dark" href="/contact">Start your project <span aria-hidden="true">↗</span></a></section>
 
-      <SiteFooter />
+      <footer><a className="footer-brand" href="/"><span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /></span><strong>PIXEL HUTCH</strong></a><p>Websites, systems, and support for businesses.</p><div><img className="footer-copyright" src="/pixel-hutch-copyright.png" alt="Copyright 2026 Pixel Hutch" /><span className="footer-links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="#top">Back to top ↑</a></span></div></footer>
     </main>
   );
 }

@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import ClientFormsSection from "./client-forms-section";
 
 type PortalData = {
   viewer: { name:string; email:string; role:string; isStaff:boolean; testClient?:boolean };
   customer: { id:number; name:string; business:string; email:string; project:string };
-  project: { id:number; status:string; progress:number; currentPhase:string; nextStep:string; targetDate:string|null; clientSummary:string; previewUrl:string; previewVisible:boolean };
+  project: { id:number; status:string; progress:number; currentPhase:string; nextStep:string; targetDate:string|null; clientSummary:string };
   updates: { id:number; title:string; message:string; createdAt:string }[];
   requests: { id:number; title:string; description:string; category:string; required:boolean; status:string; dueDate:string|null }[];
   files: { id:number; requestId:number|null; filename:string; sizeBytes:number; caption:string; uploadedByName:string; createdAt:string }[];
@@ -15,8 +14,6 @@ type PortalData = {
   payments: { id:number; billingDocumentId:number; amountCents:number; method:string; reference:string; paidAt:string }[];
   messages: { id:number; senderName:string; senderType:string; message:string; createdAt:string }[];
   tasks: { id:number; title:string; description:string; milestone:string; status:string; dueDate:string|null; clientApprovalRequired:boolean }[];
-  forms: { id:number; templateId:number; title:string; status:string; valuesJson:string; revision:number; dueDate:string|null; customerCanEdit:boolean; signatureName:string|null; signedAt:string|null; updatedAt:string }[];
-  formTemplates: { id:number; name:string; description:string; category:string; schemaJson:string; requiresSignature:boolean }[];
 };
 
 export default function ClientPortal({ initialLeadId }: { initialLeadId:number|null }) {
@@ -90,16 +87,14 @@ export default function ClientPortal({ initialLeadId }: { initialLeadId:number|n
   const amountPaid = activeInvoices.reduce((sum, item) => sum + item.paidCents, 0);
   const amountDue = Math.max(0, amountBilled - amountPaid);
   return <main className="client-portal-shell">
-    <header className="client-portal-header"><Link href="/"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch" /></Link><div><span>CLIENT PORTAL</span><b>{data.customer.business}</b></div><a href="/api/auth/logout?returnTo=/">Sign out</a></header>
+    <header className="client-portal-header"><Link href="/"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch" /></Link><div><span>CLIENT PORTAL</span><b>{data.customer.business}</b></div><a href="/signout-with-chatgpt?return_to=/">Sign out</a></header>
     <section className="client-portal-content">
-      {data.viewer.isStaff && <div className="staff-preview-banner"><b>Employee preview</b><span>You are viewing the exact portal experience connected to this customer.</span><Link href={`/crm?view=projects&lead=${data.customer.id}`}>Return to Business Hutch</Link></div>}
+      {data.viewer.isStaff && <div className="staff-preview-banner"><b>Employee preview</b><span>You are viewing the exact portal experience connected to this customer.</span><Link href={`/crm?view=projects&lead=${data.customer.id}`}>Return to Business Hub</Link></div>}
       {data.viewer.testClient && <div className="test-client-banner"><div><b>TEST CLIENT ACCOUNT</b><span>You are viewing this portal exactly as the customer sees it.</span></div><button onClick={async()=>{await fetch("/api/test-access",{method:"DELETE"});window.location.href="/crm?view=settings";}}>Return to Owner</button></div>}
       <div className="client-welcome"><div><p className="crm-eyebrow">{data.project.status.toUpperCase().replaceAll("_"," ")}</p><h1>{data.customer.project}</h1><p>Hi {data.customer.name.split(" ")[0]}—here&apos;s the latest on your project.</p></div><div className="client-progress-ring" style={{"--progress": `${data.project.progress * 3.6}deg`} as React.CSSProperties}><strong>{data.project.progress}%</strong><span>complete</span></div></div>
       <div className="client-progress-bar"><i style={{width:`${data.project.progress}%`}} /></div>
       <div className="client-summary-grid"><article><span>CURRENT PHASE</span><b>{data.project.currentPhase}</b></article><article><span>NEXT STEP</span><b>{data.project.nextStep}</b></article><article><span>TARGET DATE</span><b>{data.project.targetDate || "To be confirmed"}</b></article></div>
       <section className="client-status-card"><p className="crm-eyebrow">PROJECT SUMMARY</p><h2>Where things stand</h2><p>{data.project.clientSummary}</p></section>
-      <ClientFormsSection leadId={data.customer.id} forms={data.forms} templates={data.formTemplates} onUpdated={()=>load(data.customer.id)} />
-      {data.project.previewVisible && data.project.previewUrl && <section className="client-site-preview"><header><div><p className="crm-eyebrow">WEBSITE PREVIEW</p><h2>Review the latest build</h2><p>This is the current staged version of your site. It may change as feedback is applied.</p></div><a href={data.project.previewUrl} target="_blank" rel="noreferrer">Open full preview ↗</a></header><div><iframe src={data.project.previewUrl} title={`${data.customer.business} website preview`} loading="lazy" sandbox="allow-forms allow-modals allow-popups allow-same-origin allow-scripts" /></div><small>If the preview does not load here, use “Open full preview.” Some hosting providers prevent embedded viewing.</small></section>}
 
       {data.tasks.length > 0 && <section className="client-work-plan"><header><div><p className="crm-eyebrow">PROJECT ROADMAP</p><h2>Milestones & progress</h2><p>See the parts of the work your Pixel Hutch team has shared with you.</p></div><span>{data.tasks.filter(task => task.status === "done").length}/{data.tasks.length} complete</span></header><div>{Array.from(new Set(data.tasks.map(task => task.milestone))).map(milestone => <section key={milestone}><h3>{milestone}</h3>{data.tasks.filter(task => task.milestone === milestone).map(task => <article key={task.id} className={task.status === "done" ? "complete" : ""}><i>{task.status === "done" ? "✓" : task.status === "in_progress" ? "→" : ""}</i><div><b>{task.title}</b><small>{task.description}{task.dueDate ? ` · Target ${task.dueDate}` : ""}</small></div><em>{task.clientApprovalRequired && task.status !== "done" ? "Approval needed" : task.status.replaceAll("_"," ")}</em></article>)}</section>)}</div></section>}
 

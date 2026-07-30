@@ -1,8 +1,6 @@
 "use client";
 
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
-import SiteFooter from "./site-footer";
-import SiteHeader from "./site-header";
 
 const services = [
   {
@@ -13,7 +11,7 @@ const services = [
   },
   {
     number: "02",
-    title: "A Business Hutch built around you",
+    title: "A business hub built around you",
     copy: "Connect customers, projects, billing, files, schedules, reporting, and client communication in one configurable system.",
     tags: ["CRM", "Client portal", "Operations"],
   },
@@ -99,7 +97,19 @@ export default function Home() {
 
   return (
     <main>
-      <SiteHeader home />
+      <header className="site-header">
+        <a className="brand" href="#top" aria-label="Pixel Hutch home">
+          <img src="/pixel-hutch-logo.svg" alt="Pixel Hutch, precision solutions for your business" />
+        </a>
+        <nav aria-label="Primary navigation">
+          <a href="/services">Services &amp; Pricing</a>
+          <a href="/work">Our work</a>
+          <a href="/booking-systems">Booking systems</a>
+          <a href="#process">Process</a>
+          <a href="/about">About</a>
+        </nav>
+        <a className="button button-small" href="/contact">Let&apos;s talk <span aria-hidden="true">↗</span></a>
+      </header>
 
       <section className="hero section-shell" id="top">
         <div className="hero-copy">
@@ -160,12 +170,13 @@ export default function Home() {
             <PixelReveal className="project-card project-featured">
               <div className="project-window hub-window" aria-hidden="true">
                 <div className="window-bar"><i /><i /><i /></div>
-                <div className="hub-mini"><aside><b>PH</b><i /><i /><i /></aside><section><span>BUSINESS HUTCH</span><div><i /><i /><i /></div><strong /></section></div>
+                <div className="hub-mini"><aside><b>PH</b><i /><i /><i /></aside><section><span>BUSINESS HUB</span><div><i /><i /><i /></div><strong /></section></div>
               </div>
               <div className="project-copy">
                 <p>CRM + CLIENT PORTAL + OPERATIONS</p>
-                <h3>Pixel Hutch Business Hutch</h3>
+                <h3>Pixel Hutch Business Hub</h3>
                 <span>A working system that connects the full customer journey, from first inquiry through projects, billing, files, and ongoing support.</span>
+                <a className="service-link" href="/crm-demo">Try the interactive demo <span aria-hidden="true">→</span></a>
               </div>
             </PixelReveal>
             <PixelReveal className="project-card project-featured">
@@ -281,7 +292,11 @@ export default function Home() {
         </div>
       </section>
 
-      <SiteFooter />
+      <footer>
+        <div className="footer-brand"><span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /></span><strong>PIXEL HUTCH</strong></div>
+        <p>Websites, systems, and support for businesses.</p>
+        <div><img className="footer-copyright" src="/pixel-hutch-copyright.png" alt="Copyright 2026 Pixel Hutch" /><span className="footer-links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="#top">Back to top ↑</a></span></div>
+      </footer>
     </main>
   );
 }
