@@ -4,7 +4,7 @@ import { getDb } from "@/db";
 import { activityLogs, leads } from "@/db/schema";
 
 const CONTACT_EMAIL = "max@pixel-hutch.com";
-const FROM_EMAIL = "Pixel Hutch <notifications@pixel-hutch.com>";
+const DEFAULT_FROM_EMAIL = "Pixel Hutch <login@pixel-hutch.com>";
 
 function text(value: unknown, maxLength = 4000) {
   return String(value ?? "").trim().slice(0, maxLength);
@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     const apiKey = process.env.RESEND_API_KEY;
+    const fromEmail = process.env.RESEND_FROM_EMAIL || DEFAULT_FROM_EMAIL;
     if (!apiKey) {
       return NextResponse.json({
         error: "Your inquiry was saved, but the confirmation email could not be sent. Max can still see your request.",
@@ -117,14 +118,14 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify([
         {
-          from: FROM_EMAIL,
+          from: fromEmail,
           to: [CONTACT_EMAIL],
           reply_to: inquiry.email,
           subject: `New Pixel Hutch inquiry — ${inquiry.business}`,
           html: `<div style="font-family:Arial,sans-serif;max-width:680px;color:#464646"><h1 style="color:#f54702">New project inquiry</h1><table style="border-collapse:collapse">${details}</table><h2 style="margin-top:28px">What they want to build or fix</h2><p style="white-space:pre-wrap;line-height:1.6">${escapeHtml(inquiry.message)}</p></div>`,
         },
         {
-          from: FROM_EMAIL,
+          from: fromEmail,
           to: [inquiry.email],
           reply_to: CONTACT_EMAIL,
           subject: "We received your Pixel Hutch inquiry",

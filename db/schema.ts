@@ -167,6 +167,65 @@ export const activityLogs = sqliteTable("activity_logs", {
   createdAt: text("created_at").notNull(),
 });
 
+export const formTemplates = sqliteTable("form_templates", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description").notNull().default(""),
+  category: text("category").notNull().default("client"),
+  schemaJson: text("schema_json").notNull().default("[]"),
+  customerFacing: integer("customer_facing", { mode: "boolean" }).notNull().default(true),
+  requiresSignature: integer("requires_signature", { mode: "boolean" }).notNull().default(false),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const clientForms = sqliteTable("client_forms", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  templateId: integer("template_id").notNull(),
+  leadId: integer("lead_id").notNull(),
+  projectId: integer("project_id"),
+  title: text("title").notNull(),
+  status: text("status").notNull().default("draft"),
+  valuesJson: text("values_json").notNull().default("{}"),
+  revision: integer("revision").notNull().default(1),
+  dueDate: text("due_date"),
+  customerCanEdit: integer("customer_can_edit", { mode: "boolean" }).notNull().default(true),
+  customerVisible: integer("customer_visible", { mode: "boolean" }).notNull().default(false),
+  signatureName: text("signature_name"),
+  signedAt: text("signed_at"),
+  approvedAt: text("approved_at"),
+  createdBy: text("created_by").notNull(),
+  updatedBy: text("updated_by").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+  lastNotifiedAt: text("last_notified_at"),
+});
+
+export const formEvents = sqliteTable("form_events", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  formId: integer("form_id").notNull(),
+  eventType: text("event_type").notNull(),
+  actorEmail: text("actor_email").notNull(),
+  actorName: text("actor_name").notNull(),
+  note: text("note").notNull().default(""),
+  createdAt: text("created_at").notNull(),
+});
+
+export const clientAccounts = sqliteTable("client_accounts", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  leadId: integer("lead_id").notNull().unique(),
+  email: text("email").notNull(),
+  status: text("status").notNull().default("invited"),
+  invitedAt: text("invited_at"),
+  firstLoginAt: text("first_login_at"),
+  lastLoginAt: text("last_login_at"),
+  createdBy: text("created_by").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
 export const testAccessSessions = sqliteTable("test_access_sessions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   tokenHash: text("token_hash").notNull().unique(),
@@ -223,6 +282,8 @@ export const clientProjects = sqliteTable("client_projects", {
   nextStep: text("next_step").notNull().default("Confirm project requirements"),
   targetDate: text("target_date"),
   clientSummary: text("client_summary").notNull().default("We are getting your project organized and ready to begin."),
+  previewUrl: text("preview_url").notNull().default(""),
+  previewVisible: integer("preview_visible", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -342,4 +403,43 @@ export const internalDocumentAcknowledgments = sqliteTable("internal_document_ac
   employeeId: integer("employee_id").notNull(),
   version: integer("version").notNull(),
   acknowledgedAt: text("acknowledged_at").notNull(),
+});
+
+export const authLoginTokens = sqliteTable("auth_login_tokens", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  email: text("email").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  returnTo: text("return_to").notNull().default("/"),
+  expiresAt: text("expires_at").notNull(),
+  usedAt: text("used_at"),
+  createdAt: text("created_at").notNull(),
+});
+
+export const authSessions = sqliteTable("auth_sessions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  email: text("email").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: text("expires_at").notNull(),
+  lastSeenAt: text("last_seen_at").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+export const employeePasswords = sqliteTable("employee_passwords", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  passwordSalt: text("password_salt").notNull(),
+  iterations: integer("iterations").notNull().default(210000),
+  updatedAt: text("updated_at").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+export const clientPasswords = sqliteTable("client_passwords", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  clientAccountId: integer("client_account_id").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  passwordSalt: text("password_salt").notNull(),
+  iterations: integer("iterations").notNull().default(100000),
+  updatedAt: text("updated_at").notNull(),
+  createdAt: text("created_at").notNull(),
 });

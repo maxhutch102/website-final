@@ -83,16 +83,45 @@ function PixelReveal({ children, className = "" }: { children: ReactNode; classN
 
 export default function Home() {
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+  const [emailWarning, setEmailWarning] = useState("");
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const subject = encodeURIComponent(`Pixel Hutch inquiry from ${String(form.get("name") || "the website")}`);
-    const body = encodeURIComponent(
-      `Name: ${String(form.get("name") || "")}\nEmail: ${String(form.get("email") || "")}\nProject: ${String(form.get("project") || "")}\n\n${String(form.get("message") || "")}`,
-    );
-    setSent(true);
-    window.location.href = `mailto:max@pixel-hutch.com?subject=${subject}&body=${body}`;
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    setSending(true);
+    setError("");
+    setEmailWarning("");
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...Object.fromEntries(form.entries()),
+          business: "Not provided (homepage inquiry)",
+          budget: "Not specified",
+          timeline: "Not specified",
+          referral: "Pixel Hutch homepage",
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok && !result.leadCaptured) {
+        throw new Error(result.error || "Your inquiry could not be sent.");
+      }
+
+      formElement.reset();
+      setSent(true);
+      if (!response.ok) {
+        setEmailWarning(result.error || "Your inquiry was saved, but the confirmation email could not be sent.");
+      }
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : "Your inquiry could not be sent. Please try again.");
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -276,17 +305,18 @@ export default function Home() {
           {sent ? (
             <div className="form-success" role="status">
               <span aria-hidden="true">✓</span>
-              <h3>Message ready.</h3>
-              <p>Your email app should open with your project details ready to send. If it does not, email Max directly and we&apos;ll get the conversation started.</p>
-              <a className="button button-dark" href="mailto:max@pixel-hutch.com">Email Max</a>
+              <h3>Inquiry sent.</h3>
+              <p>{emailWarning || "We sent a confirmation to the email address you entered. Max will review your project details and reply personally."}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
+              <label className="contact-honeypot" aria-hidden="true">Website<input name="website" tabIndex={-1} autoComplete="off" /></label>
               <label>Name<input name="name" autoComplete="name" required /></label>
               <label>Email<input type="email" name="email" autoComplete="email" required /></label>
-              <label>What can we help with?<select name="project" defaultValue=""><option value="" disabled>Select one</option><option>Website</option><option>Business system or CRM</option><option>Onsite IT or hardware</option><option>Ongoing support</option><option>Not sure yet</option></select></label>
+              <label>What can we help with?<select name="project" defaultValue="" required><option value="" disabled>Select one</option><option>Website</option><option>Business system or CRM</option><option>Onsite IT or hardware</option><option>Ongoing support</option><option>Not sure yet</option></select></label>
               <label>Tell us a little more<textarea name="message" rows={4} required /></label>
-              <button className="button button-dark" type="submit">Send it our way <span aria-hidden="true">↗</span></button>
+              {error && <p className="contact-error" role="alert">{error} You can also email <a href="mailto:max@pixel-hutch.com">max@pixel-hutch.com</a>.</p>}
+              <button className="button button-dark" type="submit" disabled={sending}>{sending ? "Sending…" : "Send it our way"} <span aria-hidden="true">↗</span></button>
             </form>
           )}
         </div>
