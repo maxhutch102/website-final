@@ -1,8 +1,25 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { isAccessResponse, logActivity, requireAccess } from "@/db/access";
 import { getDb } from "@/db";
-import { businessSettings, clientProjects, leads, projectTasks } from "@/db/schema";
+import {
+  billingDocuments,
+  businessSettings,
+  calendarEvents,
+  clientAccounts,
+  clientForms,
+  clientPasswords,
+  clientProjects,
+  fileRequests,
+  formEvents,
+  leads,
+  payments,
+  projectFiles,
+  projectMessages,
+  projectTasks,
+  projectUpdates,
+  testAccessSessions,
+} from "@/db/schema";
 
 export async function GET() {
   const actor = await requireAccess();
@@ -100,4 +117,68 @@ export async function PATCH(request: NextRequest) {
   }).where(eq(leads.id, id));
   await logActivity(actor, "customer.updated", "lead", id, `Updated customer #${id}.`);
   return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(request: NextRequest) {
+  const actor = await requireAccess(["owner", "admin"]);
+  if (isAccessResponse(actor)) return actor;
+
+  const body = await request.json().catch(() => ({}));
+  const id = Number(body.id);
+  if (!Number.isInteger(id) || id < 1) return NextResponse.json({ error: "Invalid customer." }, { status: 400 });
+
+  const db = await getDb();
+  const [customer] = await db.select().from(leads).where(eq(leads.id, id)).limit(1);
+  if (!customer) return NextResponse.json({ error: "That customer no longer exists." }, { status: 404 });
+
+  const [projects, forms, documents, accounts] = await Promise.all([
+    db.select({ id: clientProjects.id }).from(clientProjects).where(eq(clientProjects.leadId, id)),
+    db.select({ id: clientForms.id }).from(clientForms).where(eq(clientForms.leadId, id)),
+    db.select({ id: billingDocuments.id }).from(billingDocuments).where(eq(billingDocuments.leadId, id)),
+    db.select({ id: clientAccounts.id }).from(clientAccounts).where(eq(clientAccounts.leadId, id)),
+  ]);
+  const projectIds = projects.map(item => item.id);
+  const formIds = forms.map(item => item.id);
+  const documentIds = documents.map(item => item.id);
+  const accountIds = accounts.map(item => item.id);
+  const files = projectIds.length
+    ? await db.select({ storageKey: projectFiles.storageKey }).from(projectFiles).where(inArray(projectFiles.projectId, projectIds))
+    : [];
+
+  const statements = [];
+  if (documentIds.length) statements.push(db.delete(payments).where(inArray(payments.billingDocumentId, documentIds)));
+  if (formIds.length) statements.push(db.delete(formEvents).where(inArray(formEvents.formId, formIds)));
+  if (accountIds.length) statements.push(db.delete(clientPasswords).where(inArray(clientPasswords.clientAccountId, accountIds)));
+  if (projectIds.length) {
+    statements.push(
+      db.delete(projectFiles).where(inArray(projectFiles.projectId, projectIds)),
+      db.delete(fileRequests).where(inArray(fileRequests.projectId, projectIds)),
+      db.delete(projectMessages).where(inArray(projectMessages.projectId, projectIds)),
+      db.delete(projectUpdates).where(inArray(projectUpdates.projectId, projectIds)),
+      db.delete(projectTasks).where(inArray(projectTasks.projectId, projectIds)),
+    );
+  }
+  statements.push(
+    db.delete(calendarEvents).where(eq(calendarEvents.leadId, id)),
+    db.delete(testAccessSessions).where(eq(testAccessSessions.leadId, id)),
+    db.delete(clientForms).where(eq(clientForms.leadId, id)),
+    db.delete(clientAccounts).where(eq(clientAccounts.leadId, id)),
+    db.delete(billingDocuments).where(eq(billingDocuments.leadId, id)),
+    db.delete(clientProjects).where(eq(clientProjects.leadId, id)),
+    db.delete(leads).where(eq(leads.id, id)),
+  );
+
+  await db.batch(statements as [typeof statements[number], ...typeof statements]);
+
+  if (files.length) {
+    try {
+      const { env } = await import("cloudflare:workers");
+      await env.BUCKET.delete(files.map(file => file.storageKey));
+    } catch (error) {
+      console.error("Customer deleted, but stored project files could not be removed.", error);
+    }
+  }
+
+  await logActivity(actor, "customer.deleted", "lead", id, `Deleted customer ${customer.business || customer.name} and all connected records.`);
+  return NextResponse.json({ ok: true, id });
 }
