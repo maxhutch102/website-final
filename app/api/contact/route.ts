@@ -145,9 +145,9 @@ export async function POST(request: NextRequest) {
       html: `<div style="font-family:Arial,sans-serif;max-width:620px;color:#464646"><div style="border-top:8px solid #f54702;padding-top:24px"><h1>Thanks, ${escapeHtml(inquiry.name)}.</h1><p style="font-size:17px;line-height:1.6">Your project inquiry made it safely to Pixel Hutch. I’ll review what you shared and reply personally at this email address.</p><p style="font-size:17px;line-height:1.6">You don’t need to prepare anything else in the meantime. If there’s an important detail you forgot, just reply to this message.</p><p style="margin-top:30px"><strong>Max Hutchison</strong><br>Pixel Hutch<br><a href="https://pixel-hutch.com" style="color:#f54702">pixel-hutch.com</a></p></div></div>`,
     }, "customer confirmation");
 
-    if (!customerDelivered) {
+    if (!ownerDelivered || !customerDelivered) {
       return NextResponse.json({
-        error: "Your inquiry was saved, but the confirmation email could not be sent. Max can still see your request.",
+        error: "Your inquiry was saved, but one of the notification emails could not be sent. Max can still see your request.",
         leadCaptured: true,
         leadId,
       }, { status: 502 });
