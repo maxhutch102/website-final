@@ -798,7 +798,7 @@ export default function CrmDashboard({ displayName }: { displayName: string }) {
       <nav className="portal-menu" aria-label="Employee workspace">
         {visibleMenu.map(([id, icon, label]) => <button key={id} className={view === id ? "active" : ""} onClick={() => openView(id)}><i>{icon}</i><span>{label}</span>{comingSoon.has(id) && <small>SOON</small>}</button>)}
       </nav>
-      <div className="portal-user"><span>{displayName.slice(0, 1).toUpperCase()}</span><div><b>{displayName}</b><small>{actor?.role || "Owner"}</small></div><a aria-label="Sign out" href="/signout-with-chatgpt?return_to=/">↗</a></div>
+      <div className="portal-user"><span>{displayName.slice(0, 1).toUpperCase()}</span><div><b>{displayName}</b><small>{actor?.role || "Owner"}</small></div><a aria-label="Sign out" href="/api/auth/logout?returnTo=/login">↗</a></div>
     </aside>
 
     <section className="portal-main">
