@@ -34,7 +34,7 @@ export default async function BillingDocumentPage({ params }: { params: Promise<
   return (
     <main className="document-viewer">
       <DocumentActions number={record.number} customer={customer} lineItems={lineItems} />
-      {relatedLead && <nav className="document-related-records" aria-label="Related records"><a href={`/crm?view=customers&lead=${relatedLead.id}`}>Customer: {relatedLead.business} ↗</a><a href={`/crm?view=projects&lead=${relatedLead.id}`}>Project: {relatedLead.project} ↗</a></nav>}
+      {relatedLead && <nav className="document-related-records" aria-label="Related records"><a href={`/admin?view=customers&lead=${relatedLead.id}`}>Customer: {relatedLead.business} ↗</a><a href={`/admin?view=projects&lead=${relatedLead.id}`}>Project: {relatedLead.project} ↗</a></nav>}
       <article className="print-document">
         <header className="print-document-head">
           <img src="/pixel-hutch-logo.svg" alt="Pixel Hutch" />

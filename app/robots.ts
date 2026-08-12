@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [{
       userAgent: "*",
       allow: ["/"],
-      disallow: ["/crm", "/portal", "/login", "/client-login", "/forgot-password", "/reset-password", "/create-client-password", "/api"],
+      disallow: ["/admin", "/crm", "/portal", "/login", "/client-login", "/forgot-password", "/reset-password", "/create-client-password", "/api"],
     }],
     host: "https://pixel-hutch.com",
     sitemap: "https://pixel-hutch.com/sitemap.xml",

@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   return new Response(null, {
     status: 303,
     headers: {
-      Location: new URL("/crm", request.url).toString(),
+      Location: new URL("/admin", request.url).toString(),
       "Set-Cookie": sessionCookie(session.token, session.expires),
       "Cache-Control": "no-store",
     },

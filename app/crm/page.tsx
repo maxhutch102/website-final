@@ -1,10 +1,11 @@
-import { requireChatGPTUser } from "@/app/chatgpt-auth";
-import CrmDashboard from "./crm-dashboard";
+import { permanentRedirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-export const metadata = { robots: { index: false, follow: false } };
-
-export default async function CrmPage() {
-  const user = await requireChatGPTUser("/crm");
-  return <CrmDashboard displayName={user.fullName || "Max"} />;
+export default async function LegacyCrmPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const params = await searchParams;
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (Array.isArray(value)) value.forEach((item) => query.append(key, item));
+    else if (value !== undefined) query.set(key, value);
+  });
+  permanentRedirect(`/admin${query.size ? `?${query.toString()}` : ""}`);
 }

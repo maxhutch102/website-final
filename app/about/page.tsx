@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 
 import { ReactNode, useEffect, useRef, useState } from "react";
+import SiteHeader from "../site-header";
 
 const values = [
   ["01", "Useful over flashy", "Good design matters, but the finished product also has to save time, reduce friction, or help your business earn trust."],
@@ -28,13 +29,7 @@ function PixelReveal({ children, className = "" }: { children: ReactNode; classN
 export default function AboutPage() {
   return (
     <main>
-      <header className="site-header">
-        <a className="brand" href="/" aria-label="Pixel Hutch home"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch, precision solutions for your business" /></a>
-        <nav aria-label="Primary navigation">
-          <a href="/services">Services &amp; Pricing</a><a href="/work">Our work</a><a href="/#process">Process</a><a className="nav-active" href="/about">About</a>
-        </nav>
-        <a className="button button-small" href="/contact">Let&apos;s talk <span aria-hidden="true">↗</span></a>
-      </header>
+      <SiteHeader active="about" />
 
       <section className="about-hero section-shell" id="top">
         <div className="about-hero-copy">

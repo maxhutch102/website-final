@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 
 import { ReactNode, useEffect, useRef, useState } from "react";
+import SiteHeader from "../site-header";
 
 function PixelReveal({ children, className = "" }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -56,13 +57,7 @@ const projects = [
 export default function WorkPage() {
   return (
     <main>
-      <header className="site-header">
-        <a className="brand" href="/" aria-label="Pixel Hutch home"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch, precision solutions for your business" /></a>
-        <nav aria-label="Primary navigation">
-          <a href="/services">Services &amp; Pricing</a><a className="nav-active" href="/work">Our work</a><a href="/#process">Process</a><a href="/about">About</a>
-        </nav>
-        <a className="button button-small" href="/contact">Let&apos;s talk <span aria-hidden="true">↗</span></a>
-      </header>
+      <SiteHeader active="work" />
 
       <section className="work-hero section-shell" id="top">
         <div>
@@ -95,7 +90,7 @@ export default function WorkPage() {
               <h2>{project.title}</h2>
               <p>{project.copy}</p>
               <div className="portfolio-deliverables">{project.deliverables.map(item => <span key={item}>{item}</span>)}</div>
-              {project.visual === "business-hub" && <a className="button button-small" href="/crm-demo">Try the CRM demo <span aria-hidden="true">↗</span></a>}
+              {project.visual === "business-hub" && <a className="button button-small" href="/demos">Explore the demos <span aria-hidden="true">↗</span></a>}
             </div>
           </article>
         ))}

@@ -7,7 +7,7 @@ export const metadata = { robots: { index: false, follow: false } };
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; email?: string; returnTo?: string }> }) {
   const user = await getChatGPTUser();
   const params = await searchParams;
-  const returnTo = safeRelativeReturnPath(params.returnTo || "/crm");
+  const returnTo = safeRelativeReturnPath(params.returnTo || "/admin");
 
   return <main className="employee-login-shell">
     <section className="employee-login-card">
@@ -20,7 +20,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <h1>{user ? "Welcome back." : "Sign in to your workspace."}</h1>
         <p>Customer information, project notes, follow-ups, and internal records are protected inside the Pixel Hutch employee workspace.</p>
       </div>
-      {user ? <Link className="crm-primary-button login-action" href="/crm">Open Business Hutch</Link> :
+      {user ? <Link className="crm-primary-button login-action" href="/admin">Open Business Hutch</Link> :
         <form className="auth-form" action="/api/auth/employee-login" method="post">
           <input type="hidden" name="returnTo" value={returnTo} />
           <label>Email address<input name="email" type="email" autoComplete="username" defaultValue={params.email || ""} required /></label>

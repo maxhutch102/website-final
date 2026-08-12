@@ -29,6 +29,6 @@ export default async function CrmSectionPage({
   const { section } = await params;
   if (!sections.has(section)) notFound();
 
-  const user = await requireChatGPTUser(`/crm/${section}`);
+  const user = await requireChatGPTUser(`/admin/${section}`);
   return <CrmDashboard displayName={user.fullName || "Max"} initialView={section} />;
 }

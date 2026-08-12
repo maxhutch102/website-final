@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
+import SiteHeader from "./site-header";
 
 const services = [
   {
@@ -126,19 +127,7 @@ export default function Home() {
 
   return (
     <main>
-      <header className="site-header">
-        <a className="brand" href="#top" aria-label="Pixel Hutch home">
-          <img src="/pixel-hutch-logo.svg" alt="Pixel Hutch, precision solutions for your business" />
-        </a>
-        <nav aria-label="Primary navigation">
-          <a href="/services">Services &amp; Pricing</a>
-          <a href="/work">Our work</a>
-          <a href="/booking-systems">Booking systems</a>
-          <a href="#process">Process</a>
-          <a href="/about">About</a>
-        </nav>
-        <a className="button button-small" href="/contact">Let&apos;s talk <span aria-hidden="true">↗</span></a>
-      </header>
+      <SiteHeader home />
 
       <section className="hero section-shell" id="top">
         <div className="hero-copy">
@@ -205,7 +194,7 @@ export default function Home() {
                 <p>CRM + CLIENT PORTAL + OPERATIONS</p>
                 <h3>Pixel Hutch Business Hub</h3>
                 <span>A working system that connects the full customer journey, from first inquiry through projects, billing, files, and ongoing support.</span>
-                <a className="service-link" href="/crm-demo">Try the interactive demo <span aria-hidden="true">→</span></a>
+                <a className="service-link" href="/demos">Explore all demos <span aria-hidden="true">→</span></a>
               </div>
             </PixelReveal>
             <PixelReveal className="project-card project-featured">

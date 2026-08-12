@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 
 import { FormEvent, useState } from "react";
+import SiteHeader from "../site-header";
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
@@ -41,13 +42,7 @@ export default function ContactPage() {
 
   return (
     <main>
-      <header className="site-header">
-        <a className="brand" href="/" aria-label="Pixel Hutch home"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch, precision solutions for your business" /></a>
-        <nav aria-label="Primary navigation">
-          <a href="/services">Services &amp; Pricing</a><a href="/work">Our work</a><a href="/#process">Process</a><a href="/about">About</a>
-        </nav>
-        <a className="button button-small nav-active-button" href="/contact">Let&apos;s talk <span aria-hidden="true">↗</span></a>
-      </header>
+      <SiteHeader active="contact" />
 
       <section className="contact-hero section-shell" id="top">
         <div>

@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 
 type SiteHeaderProps = {
-  active?: "services" | "work" | "about" | "contact";
+  active?: "services" | "work" | "demos" | "about" | "contact";
   home?: boolean;
 };
 
 const links = [
   { id: "services", href: "/services", label: "Services & Pricing" },
   { id: "work", href: "/work", label: "Our work" },
+  { id: "demos", href: "/demos", label: "Demos" },
   { id: "process", href: "/#process", label: "Process" },
   { id: "about", href: "/about", label: "About" },
 ] as const;

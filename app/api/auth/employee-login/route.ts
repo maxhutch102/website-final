@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   const form = await request.formData();
   const email = String(form.get("email") || "").trim().toLowerCase();
   const password = String(form.get("password") || "");
-  const returnTo = safeRelativeReturnPath(String(form.get("returnTo") || "/crm"));
+  const returnTo = safeRelativeReturnPath(String(form.get("returnTo") || "/admin"));
   const db = await getDb();
   const [employee] = await db.select().from(employees).where(eq(employees.email, email)).limit(1);
   const isOwner = email === "mhutchi2517@gmail.com";

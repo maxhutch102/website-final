@@ -6,11 +6,7 @@ export const metadata = {
 
 export default function TermsPage() {
   return <main>
-    <header className="site-header">
-      <a className="brand" href="/" aria-label="Pixel Hutch home"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch" /></a>
-      <nav aria-label="Primary navigation"><a href="/services">Services &amp; Pricing</a><a href="/work">Our work</a><a href="/#process">Process</a><a href="/about">About</a></nav>
-      <a className="button button-small" href="/contact">Let&apos;s talk <span aria-hidden="true">↗</span></a>
-    </header>
+    <SiteHeader />
     <article className="legal-page section-shell">
       <header><p className="kicker">WEBSITE TERMS</p><h1>USEFUL.<br />FAIR.<br />CLEAR.</h1><p className="legal-updated">Effective July 23, 2026</p></header>
       <div className="legal-content">
@@ -25,3 +21,4 @@ export default function TermsPage() {
     <footer><a className="footer-brand" href="/"><span className="brand-mark" aria-hidden="true"><i /><i /><i /><i /></span><strong>PIXEL HUTCH</strong></a><p>Websites, systems, and support for businesses.</p><div><img className="footer-copyright" src="/pixel-hutch-copyright.png" alt="Copyright 2026 Pixel Hutch" /><span className="footer-links"><a href="/privacy">Privacy</a><a href="/">Home</a></span></div></footer>
   </main>;
 }
+import SiteHeader from "../site-header";

@@ -6,6 +6,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ["/services", "monthly", 0.95],
     ["/booking-systems", "monthly", 0.9],
     ["/crm-demo", "monthly", 0.85],
+    ["/demos", "monthly", 0.9],
     ["/work", "monthly", 0.8],
     ["/about", "monthly", 0.75],
     ["/contact", "monthly", 0.9],

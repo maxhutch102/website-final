@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   if (employee.status !== "active") {
     return Response.json({ error: "Activate this employee before sending account access." }, { status: 400 });
   }
-  const token = await createEmailToken(employee.email, "password-reset", "/crm");
+  const token = await createEmailToken(employee.email, "password-reset", "/admin");
   await sendAuthEmail(request, employee.email, "password-reset", token);
   await logActivity(actor, "employee.access_sent", "employee", employee.id, `Sent an account setup/reset link to ${employee.email}.`);
   return Response.json({ ok: true, message: `Secure account link sent to ${employee.email}.` });

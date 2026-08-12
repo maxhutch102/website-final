@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   const form = await request.formData();
   const email = String(form.get("email") || "").trim().toLowerCase();
   const type = String(form.get("type") || "client-password-reset");
-  const returnTo = String(form.get("returnTo") || (type === "password-reset" ? "/crm" : "/portal"));
+  const returnTo = String(form.get("returnTo") || (type === "password-reset" ? "/admin" : "/portal"));
   const db = await getDb();
 
   let allowed = false;

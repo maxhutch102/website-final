@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import SiteHeader from "../site-header";
 
 export const metadata: Metadata = {
   title: "Custom Online Booking Systems for Small Businesses",
@@ -23,13 +24,7 @@ const features = [
 export default function BookingSystemsPage() {
   return (
     <main>
-      <header className="site-header">
-        <a className="brand" href="/" aria-label="Pixel Hutch home"><img src="/pixel-hutch-logo.svg" alt="Pixel Hutch" /></a>
-        <nav aria-label="Primary navigation">
-          <a href="/services">Services &amp; Pricing</a><a href="/work">Our work</a><a className="nav-active" href="/booking-systems">Booking systems</a><a href="/about">About</a>
-        </nav>
-        <a className="button button-small" href="/contact">Let&apos;s talk <span aria-hidden="true">↗</span></a>
-      </header>
+      <SiteHeader active="demos" />
 
       <section className="product-hero section-shell">
         <div>
