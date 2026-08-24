@@ -40,7 +40,7 @@ const projects = [
     eyebrow: "BRAND + WEBSITE + LEAD SYSTEM",
     title: "Pixel Hutch Website",
     status: "Working system",
-    copy: "The site you’re using right now: a complete business sales experience with clear services, transparent pricing, qualified inquiries, automated email confirmations, and a foundation for a private CRM.",
+    copy: "The site you’re using right now: a complete business sales experience with clear services, guided project inquiries, automated email confirmations, and a foundation for a private CRM.",
     deliverables: ["Multi page website", "Direct inquiry form", "Email automation", "CRM ready lead data"],
     visual: "pixel-hutch",
   },

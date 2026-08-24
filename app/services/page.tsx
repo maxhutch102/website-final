@@ -53,9 +53,9 @@ const offers = [
 ];
 
 const packages = [
-  { name: "Starter Site", price: "$1,495", note: "Up to 5 pages", items: ["Custom mobile-friendly design", "Contact form", "Basic search setup", "Launch support"] },
-  { name: "Business Site", price: "$2,495", note: "More room to grow", items: ["Expanded page count", "Stronger search setup", "Business integrations", "Custom functionality"], featured: true },
-  { name: "Online Store", price: "From $3,495", note: "Sell products online", items: ["Product catalog", "Secure payments", "Shipping or pickup setup", "Management training"] },
+  { name: "Starter Site", note: "A focused professional presence", items: ["Custom mobile-friendly design", "Contact form", "Basic search setup", "Launch support"] },
+  { name: "Business Site", note: "More room to grow", items: ["Expanded page count", "Stronger search setup", "Business integrations", "Custom functionality"], featured: true },
+  { name: "Online Store", note: "Built to sell online", items: ["Product catalog", "Secure payments", "Shipping or pickup setup", "Management training"] },
 ];
 
 const faqs = [
@@ -108,16 +108,16 @@ export default function ServicesPage() {
 
       <section className="services-pricing" id="pricing-details">
         <div className="section-shell">
-          <div className="section-intro pricing-intro"><p className="kicker">WEBSITE PACKAGES</p><h2>Clear starting points. No mystery math.</h2><p>We confirm the scope and total price before work begins. If your project needs something outside a package, you will know before it becomes a bill.</p></div>
-          <div className="pricing-grid">{packages.map((item) => <PixelReveal className={`pricing-card ${item.featured ? "pricing-featured" : ""}`} key={item.name}>{item.featured && <span className="popular-label">MOST POPULAR</span>}<p className="package-name">{item.name}</p><h3>{item.price}</h3><p>{item.note}</p><ul>{item.items.map((feature) => <li key={feature}>{feature}</li>)}</ul><a className="text-link" href="/contact">Ask about this package <span aria-hidden="true">↗</span></a></PixelReveal>)}</div>
+          <div className="section-intro pricing-intro"><p className="kicker">WEBSITE PACKAGES</p><h2>Clear starting points, shaped around you.</h2><p>Start with the package that feels closest. We&apos;ll confirm the right scope and give you a clear proposal before any work begins.</p></div>
+          <div className="pricing-grid">{packages.map((item) => <PixelReveal className={`pricing-card ${item.featured ? "pricing-featured" : ""}`} key={item.name}>{item.featured && <span className="popular-label">MOST POPULAR</span>}<p className="package-name">{item.name}</p><h3>{item.note}</h3><ul>{item.items.map((feature) => <li key={feature}>{feature}</li>)}</ul><a className="text-link" href="/contact">Ask about this package <span aria-hidden="true">↗</span></a></PixelReveal>)}</div>
 
           <div className="plan-heading"><p className="kicker">AFTER LAUNCH</p><h2>Choose support that fits how you work.</h2></div>
           <div className="care-comparison">
-            <div><p className="package-name">ESSENTIAL CARE</p><h3>$99<span>/month</span></h3><p>Reliable upkeep for businesses that only need occasional changes.</p><ul><li>Hosting coordination</li><li>Security and backups</li><li>Minor content updates</li><li>Standard support</li></ul></div>
-            <div><p className="package-name">GROWTH CARE</p><h3>$199<span>/month</span></h3><p>More hands-on help for businesses actively improving their online presence.</p><ul><li>Everything in Essential</li><li>More monthly edits</li><li>Reporting and search monitoring</li><li>Priority support</li></ul></div>
+            <div><p className="package-name">ESSENTIAL CARE</p><h3>Reliable upkeep</h3><p>For businesses that only need occasional changes.</p><ul><li>Hosting coordination</li><li>Security and backups</li><li>Minor content updates</li><li>Standard support</li></ul></div>
+            <div><p className="package-name">GROWTH CARE</p><h3>Hands-on support</h3><p>For businesses actively improving their online presence.</p><ul><li>Everything in Essential</li><li>More monthly edits</li><li>Reporting and search monitoring</li><li>Priority support</li></ul></div>
             <div className="custom-callout"><p className="package-name">PIXEL HUTCH BUSINESS HUB</p><h3>Start with the core. Add what fits.</h3><p>A configurable CRM foundation for customers, projects, billing, files, scheduling, reporting, and client access, adapted to your business rather than rebuilt from zero.</p><a className="button button-dark" href="/contact">Ask about a business system <span aria-hidden="true">↗</span></a></div>
           </div>
-          <p className="pricing-note">Projects begin with a 50% deposit. The remaining 25% is due after design approval and 25% before launch. Domains, paid third-party services, photography, copywriting, and unusual integrations are quoted separately.</p>
+          <p className="pricing-note">Every project receives a written scope, quote, and payment schedule before work begins. Domains, paid third-party services, photography, copywriting, and unusual integrations are quoted separately.</p>
         </div>
       </section>
 

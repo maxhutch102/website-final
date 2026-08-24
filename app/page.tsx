@@ -33,20 +33,17 @@ const steps = [
 const packages = [
   {
     name: "Starter Site",
-    price: "$1,495",
     description: "A polished, professional home for a business that needs to look credible and turn visitors into conversations.",
     features: ["Up to 5 pages", "Mobile-friendly design", "Contact form", "Basic search setup"],
   },
   {
     name: "Business Site",
-    price: "$2,495",
     description: "A more capable site for an established business ready for stronger content, integrations, and room to grow.",
     features: ["Expanded page count", "Stronger search setup", "Business integrations", "Custom functionality"],
     featured: true,
   },
   {
     name: "Online Store",
-    price: "From $3,495",
     description: "A complete online storefront built to make selling, fulfillment, and day-to-day management feel straightforward.",
     features: ["Product catalog", "Secure payments", "Shipping or pickup setup", "Store management training"],
   },
@@ -241,16 +238,15 @@ export default function Home() {
       <section className="pricing" id="pricing">
         <div className="section-shell">
           <div className="section-intro pricing-intro">
-            <p className="kicker">STRAIGHTFORWARD PRICING</p>
+            <p className="kicker">CLEAR STARTING POINTS</p>
             <h2>Start with what your business actually needs.</h2>
-            <p>Every project is shaped around your goals. These starting points make the budget clear before we ever begin.</p>
+            <p>Choose the closest fit, then we&apos;ll shape the scope and prepare a clear proposal around your goals.</p>
           </div>
           <div className="pricing-grid">
             {packages.map((item) => (
               <PixelReveal className={`pricing-card ${item.featured ? "pricing-featured" : ""}`} key={item.name}>
                 {item.featured && <span className="popular-label">MOST POPULAR</span>}
                 <p className="package-name">{item.name}</p>
-                <h3>{item.price}</h3>
                 <p>{item.description}</p>
                 <ul>{item.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
                 <a className="text-link" href={`/services#${item.name === "Starter Site" ? "websites" : item.name === "Business Site" ? "websites" : "stores"}`}>See package details <span aria-hidden="true">→</span></a>
@@ -258,11 +254,11 @@ export default function Home() {
             ))}
           </div>
           <div className="care-plans">
-            <div><span>ESSENTIAL CARE</span><strong>$99/month</strong><p>Hosting coordination, security, backups, minor updates, and support.</p></div>
-            <div><span>GROWTH CARE</span><strong>$199/month</strong><p>More monthly edits, reporting, search monitoring, and priority support.</p></div>
+            <div><span>ESSENTIAL CARE</span><strong>Reliable upkeep</strong><p>Hosting coordination, security, backups, minor updates, and support.</p></div>
+            <div><span>GROWTH CARE</span><strong>Hands-on support</strong><p>More monthly edits, reporting, search monitoring, and priority support.</p></div>
             <div><span>CUSTOM SYSTEMS</span><strong>Custom quote</strong><p>CRMs, customer portals, automations, and internal business tools.</p></div>
           </div>
-          <p className="pricing-note">Projects begin with a 50% deposit. Domains, third-party subscriptions, photography, copywriting, and unusual integrations are quoted separately.</p>
+          <p className="pricing-note">Every project receives a written scope and quote before work begins. Domains, third-party subscriptions, photography, copywriting, and unusual integrations are quoted separately.</p>
         </div>
       </section>
 
